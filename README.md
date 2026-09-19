@@ -146,12 +146,12 @@ also covers phones, where that column is the whole page.
 `pnpm build` emits a static `dist/`, and two targets are wired to it. They
 build the same output, so either can serve the site alone.
 
-**Cloudflare Workers.** `wrangler.jsonc` declares an assets-only Worker — no
+**Cloudflare Workers.** `wrangler.toml` declares an assets-only Worker — no
 `main`, so `dist/` is served from the edge and no Worker ever boots. Connect
 the repo in the dashboard under Workers & Pages → the Worker → Settings →
 Builds. That runs over Cloudflare's GitHub App, so nothing is stored in the
 repo and no API token is involved. Build settings live in the dashboard, not
-in `wrangler.jsonc`, which Workers Builds ignores for that purpose:
+in `wrangler.toml`, which Workers Builds ignores for that purpose:
 
 | setting        | value                               |
 | -------------- | ----------------------------------- |
