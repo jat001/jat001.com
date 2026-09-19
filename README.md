@@ -143,4 +143,32 @@ also covers phones, where that column is the whole page.
 
 ## Deploying
 
-`pnpm build` emits a static `dist/`. Any static host works.
+`pnpm build` emits a static `dist/`, and two targets are wired to it. They
+build the same output, so either can serve the site alone.
+
+**Cloudflare Workers.** `wrangler.jsonc` declares an assets-only Worker — no
+`main`, so `dist/` is served from the edge and no Worker ever boots. Connect
+the repo in the dashboard under Workers & Pages → the Worker → Settings →
+Builds. That runs over Cloudflare's GitHub App, so nothing is stored in the
+repo and no API token is involved. Build settings live in the dashboard, not
+in `wrangler.jsonc`, which Workers Builds ignores for that purpose:
+
+| setting        | value                               |
+| -------------- | ----------------------------------- |
+| Build command  | `pnpm run build`                    |
+| Deploy command | `npx wrangler deploy` (the default) |
+
+`wrangler deploy` from a checkout works too, for a manual push.
+
+**GitHub Pages.** `.github/workflows/pages.yml` builds on every push to `main`
+and hands the artefact to `actions/deploy-pages`. Set the Pages source to
+"GitHub Actions" in repo settings.
+
+Both assume the site sits at the root of its domain: `astro.config.ts` sets
+`site` and deliberately no `base`. Serving from a subpath, such as the default
+`jat001.github.io/jat001.com`, would need `base` plus matching changes to the
+root-absolute paths in `profile.ts`. Domains are configured on each platform
+— there is no `public/CNAME` in the repo.
+
+Both builds reach for WakaTime, so an outage there fails the deploy instead of
+shipping a stale list.
