@@ -16,8 +16,10 @@
   type Theme = 'light' | 'dark';
   const STORAGE_KEY = 'theme';
 
+  /** Asks for dark rather than light, so a browser that answers neither lands
+   *  on light — the same fallback the token sheet uses. */
   const systemTheme = (): Theme =>
-    window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
   const currentTheme = (): Theme => {
     const forced = document.documentElement.dataset.theme;
@@ -41,10 +43,7 @@
       const next: Theme = currentTheme() === 'dark' ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
       try {
-        // Remove rather than store: with no override left behind, the page
-        // follows the system if it changes later.
-        if (next === systemTheme()) localStorage.removeItem(STORAGE_KEY);
-        else localStorage.setItem(STORAGE_KEY, next);
+        localStorage.setItem(STORAGE_KEY, next);
       } catch {
         /* private mode — the toggle still works for this page view */
       }
@@ -88,20 +87,25 @@
     border-color: var(--cy);
   }
 
-  /* show the icon for the theme you would switch TO */
+  /* The icon names the theme now showing, so these mirror the token blocks in
+     global.css — media query included. */
   .moon {
     display: none;
   }
-  :global(:root:not([data-theme='light'])) .moon {
-    display: inline;
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .sun {
+      display: none;
+    }
+    :global(:root:not([data-theme='light'])) .moon {
+      display: inline;
+    }
   }
-  :global(:root:not([data-theme='light'])) .sun {
+
+  :global(:root[data-theme='dark']) .sun {
     display: none;
   }
-  :global(:root[data-theme='light']) .sun {
+  :global(:root[data-theme='dark']) .moon {
     display: inline;
-  }
-  :global(:root[data-theme='light']) .moon {
-    display: none;
   }
 </style>

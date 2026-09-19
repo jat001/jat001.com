@@ -51,8 +51,8 @@ const personSchema = {
     <link rel="icon" type="image/svg+xml" href={profile.icon} />
     <link rel="canonical" href={canonical.href} />
 
-    {/* Applies a stored theme override before first paint, so reloading in
-        light mode never flashes the dark background. */}
+    {/* Applies a stored choice before first paint, so a reload never flashes
+        the other theme first. */}
     <script is:inline>
       try {
         const saved = localStorage.getItem('theme');
@@ -81,8 +81,10 @@ const personSchema = {
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:image" content={socialImage} />
 
+    {/* Dark carries the query and light does not: a browser that reports no
+        preference skips the first and takes light, as the token sheet does. */}
     <meta name="theme-color" content="#04060c" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#f5f6fa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#f5f6fa" />
 
     <script
       type="application/ld+json"

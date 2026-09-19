@@ -1,49 +1,17 @@
-/* ─────────────────────────────────────────────────────────────
-   Tokens. Dark is the default; light mirrors it.
+/* ─────────────────────────────────────────────────────
+   Tokens. Light is the base, dark mirrors it. The query asks for
+   dark rather than light on purpose: a browser that reports no
+   preference at all matches nothing and keeps the base.
 
    Resolution order:
-     :root                          -> dark
-     prefers light + not forced dark -> light
-     [data-theme="light"]           -> light (forced)
-     [data-theme="dark"]            -> dark  (forced)
-   ───────────────────────────────────────────────────────────── */
+     :root                           -> light
+     prefers dark + not forced light -> dark
+     [data-theme="dark"]             -> dark (forced)
+
+   Forcing light needs no block of its own — it is the base, and
+   the query's :not() steps aside for it.
+   ───────────────────────────────────────────────────── */
 :root {
-  color-scheme: dark;
-
-  --bg: #04060c;
-  --bg-raised: rgba(255, 255, 255, 0.025);
-  --line: rgba(150, 180, 255, 0.12);
-  --line-strong: rgba(150, 180, 255, 0.24);
-
-  --txt: #e7edfb;
-  --dim: #8593b0;
-  --dimmer: #59637d;
-
-  --cy: #2fe6ff;
-  --vi: #8b5cff;
-  --mg: #ff4fd8;
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    color-scheme: light;
-
-    --bg: #f5f6fa;
-    --bg-raised: rgba(255, 255, 255, 0.72);
-    --line: rgba(18, 28, 58, 0.14);
-    --line-strong: rgba(18, 28, 58, 0.26);
-
-    --txt: #0b1020;
-    --dim: #4d5772;
-    --dimmer: #7b8499;
-
-    --cy: #0093b8;
-    --vi: #6134d8;
-    --mg: #c41b92;
-  }
-}
-
-:root[data-theme='light'] {
   color-scheme: light;
 
   --bg: #f5f6fa;
@@ -58,9 +26,7 @@
   --cy: #0093b8;
   --vi: #6134d8;
   --mg: #c41b92;
-}
 
-:root {
   --ramp: linear-gradient(100deg, var(--cy) 0%, var(--vi) 52%, var(--mg) 100%);
 
   --font-cjk: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
@@ -70,6 +36,42 @@
 
   --gut: clamp(20px, 5vw, 64px);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg: #04060c;
+    --bg-raised: rgba(255, 255, 255, 0.025);
+    --line: rgba(150, 180, 255, 0.12);
+    --line-strong: rgba(150, 180, 255, 0.24);
+
+    --txt: #e7edfb;
+    --dim: #8593b0;
+    --dimmer: #59637d;
+
+    --cy: #2fe6ff;
+    --vi: #8b5cff;
+    --mg: #ff4fd8;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #04060c;
+  --bg-raised: rgba(255, 255, 255, 0.025);
+  --line: rgba(150, 180, 255, 0.12);
+  --line-strong: rgba(150, 180, 255, 0.24);
+
+  --txt: #e7edfb;
+  --dim: #8593b0;
+  --dimmer: #59637d;
+
+  --cy: #2fe6ff;
+  --vi: #8b5cff;
+  --mg: #ff4fd8;
 }
 
 *,

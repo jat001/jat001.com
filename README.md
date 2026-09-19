@@ -113,16 +113,23 @@ their owners.
 
 ## Themes
 
-Dark by default, light mirrored from the same token names. Resolution order:
+Light is the base and dark mirrors it from the same token names:
 
 ```
-:root                            -> dark
-prefers light + not forced dark  -> light
-[data-theme="light"|"dark"]      -> forced, stored in localStorage
+:root                            -> light
+prefers dark + not forced light  -> dark
+[data-theme="dark"]              -> dark, forced
 ```
 
-An inline script in `<head>` applies a stored override before first paint, so
-reloading in light mode never flashes dark.
+The query asks for dark, never for light, so a browser that reports no
+preference at all matches nothing and keeps the base. Forcing light needs no
+rule of its own for the same reason.
+
+`localStorage` is read once, by an inline script in `<head>`, which applies a
+stored choice before first paint so a reload never flashes the other theme.
+It is written in one place only — the toggle, on click — and a click always
+stores. One click therefore pins the theme: the page stops following the OS
+until that key is cleared.
 
 ## Layout
 
