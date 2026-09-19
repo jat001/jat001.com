@@ -1,0 +1,113 @@
+---
+import { profile } from '../data/profile';
+---
+
+<div class="intro">
+  <h1 class="name">{profile.name}</h1>
+  <p class="tagline">{profile.tagline}</p>
+
+  <ul class="links">
+    {
+      profile.links.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            rel={link.href.startsWith('http') ? 'noopener noreferrer me' : 'me'}
+            {...link.href.startsWith('http') ? { target: '_blank' } : {}}
+          >
+            <span class="key">{link.label}</span>
+            <span class="value">{link.display}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  /* Queried below, so the contact row reacts to its own column rather than to
+     the viewport — the squeeze comes from the sphere taking the other track. */
+  .intro {
+    container-type: inline-size;
+  }
+
+  .name {
+    font-size: clamp(64px, 14vw, 220px);
+    font-weight: 600;
+    line-height: 0.84;
+    text-align: center;
+    /* glyphs overflow the 0.84 line box; pad it back so the block centres */
+    padding-top: 0.22em;
+    /* J is right-weighted, so optical centre sits left of geometric */
+    translate: -0.03em 0;
+    letter-spacing: -0.05em;
+    background: var(--ramp);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .tagline {
+    font-size: clamp(18px, 2vw, 28px);
+    font-weight: 300;
+    line-height: 1.38;
+    letter-spacing: -0.015em;
+    color: var(--dim);
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  .links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    margin-top: 62px;
+    list-style: none;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+  .links a {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    height: 100%;
+    padding: 22px 16px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-raised);
+    transition: color 0.3s var(--ease);
+  }
+  .links a:hover,
+  .links a:focus-visible {
+    color: var(--cy);
+  }
+  .key {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--dimmer);
+  }
+  .value {
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  /* "chat@jat.email" measures 103.6px, so a cell needs 136px and three of them
+     need 407px. Below that the address wraps, and a little further down
+     auto-fit drops to 2 + 1 with an empty cell. Stack instead: one row each,
+     label against value. This also covers phones, where the column is the
+     whole page. */
+  @container (max-width: 420px) {
+    .links {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .links a {
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 16px;
+    }
+  }
+</style>

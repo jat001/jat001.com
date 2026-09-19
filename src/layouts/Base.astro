@@ -1,0 +1,101 @@
+---
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { Font } from 'astro:assets';
+import { profile, title } from '../data/profile';
+import { tools } from '../data/tools';
+import '../styles/global.css';
+
+const canonical = new URL('/', Astro.site ?? profile.url);
+
+/** A PNG carries its dimensions in the IHDR chunk: an 8-byte signature, then
+ *  a 4-byte length and the "IHDR" tag, then width and height as big-endian
+ *  uint32s — offsets 16 and 20. Reading them here rather than hard-coding
+ *  them means the meta cannot drift if the image is ever replaced. */
+function pngSize(publicPath: string) {
+  // Resolved from the project root, not `import.meta.url`: this frontmatter is
+  // bundled into dist/.prerender/ before it runs, so a module-relative path
+  // points at the wrong place in a production build (but works in dev).
+  const bytes = readFileSync(join(process.cwd(), 'public', publicPath));
+  if (bytes.toString('ascii', 12, 16) !== 'IHDR') {
+    throw new Error(`${publicPath} is not a PNG — og:image dimensions unavailable`);
+  }
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
+
+const socialImage = new URL(profile.socialImage, canonical).href;
+const socialSize = pngSize(profile.socialImage);
+
+/**
+ * Person schema. `sameAs` is what ties jat001.com, GitHub and the blog
+ * together as one identity for a search engine.
+ */
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  description: profile.description,
+  url: canonical.href,
+  image: socialImage,
+  email: profile.links.find((l) => l.href.startsWith('mailto:'))?.href,
+  sameAs: profile.links.filter((l) => l.href.startsWith('http')).map((l) => l.href),
+  knowsAbout: tools.map((tool) => tool.label),
+};
+---
+
+<!doctype html>
+<html lang={profile.locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={profile.icon} />
+    <link rel="canonical" href={canonical.href} />
+
+    {/* Applies a stored theme override before first paint, so reloading in
+        light mode never flashes the dark background. */}
+    <script is:inline>
+      try {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.dataset.theme = saved;
+        }
+      } catch {}
+    </script>
+
+    <title>{title}</title>
+    <meta name="description" content={profile.description} />
+
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={profile.description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:site_name" content={profile.name} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content={String(socialSize.width)} />
+    <meta property="og:image:height" content={String(socialSize.height)} />
+    <meta property="og:image:alt" content={profile.name} />
+
+    {/* `summary`, not `summary_large_image`: the image is square, and the
+        large card crops to about 2:1, which would cut the top and bottom off. */}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content={socialImage} />
+
+    <meta name="theme-color" content="#04060c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f6fa" media="(prefers-color-scheme: light)" />
+
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify(personSchema)}
+    />
+
+    <Font cssVariable="--font-display" preload />
+    <Font cssVariable="--font-mono" preload />
+  </head>
+
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <slot />
+  </body>
+</html>

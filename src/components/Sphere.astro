@@ -1,0 +1,172 @@
+---
+import { profile } from '../data/profile';
+import { tools } from '../data/tools';
+---
+
+<language-sphere class="stage">
+  <ul aria-label="Languages I use">
+    {
+      tools.map((tool) => (
+        <li data-tool>
+          <a
+            href={profile.languages.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            draggable="false"
+            aria-label={`${tool.label} — ${profile.languages.label}`}
+          >
+            <svg viewBox={tool.viewBox} aria-hidden="true">
+              {tool.paths.map((d) => (
+                <path d={d} fill="currentColor" />
+              ))}
+            </svg>
+            <span>{tool.label}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</language-sphere>
+
+<script>
+  class LanguageSphere extends HTMLElement {
+    #teardown: (() => void) | null = null;
+    /** bumped on disconnect so a late chunk load does not attach to a dead node */
+    #generation = 0;
+
+    #active = false;
+    #resize: ResizeObserver | null = null;
+
+    connectedCallback() {
+      // Watch the box rather than repeating the CSS breakpoint here: a hidden
+      // element measures 0, so this covers display:none and a tablet rotating
+      // across the breakpoint with one rule.
+      this.#resize = new ResizeObserver(() => this.#sync());
+      this.#resize.observe(this);
+      this.#sync();
+    }
+
+    disconnectedCallback() {
+      this.#resize?.disconnect();
+      this.#resize = null;
+      this.#stop();
+    }
+
+    #sync() {
+      const visible = this.offsetWidth > 0 && this.offsetHeight > 0;
+      if (visible === this.#active) return;
+      this.#active = visible;
+      if (!visible) return this.#stop();
+
+      const generation = ++this.#generation;
+      import('../scripts/sphere').then(({ initSphere }) => {
+        if (generation !== this.#generation || !this.isConnected) return;
+        this.#teardown = initSphere(this);
+      });
+    }
+
+    #stop() {
+      this.#generation++;
+      this.#teardown?.();
+      this.#teardown = null;
+    }
+  }
+
+  // HMR can re-run this module; defining twice throws
+  if (!customElements.get('language-sphere')) {
+    customElements.define('language-sphere', LanguageSphere);
+  }
+</script>
+
+<style>
+  .stage {
+    display: block;
+    position: relative;
+    aspect-ratio: 1;
+    /* Deliberately wider than the text column. A circle leaves its corners
+       empty and the cloud is far sparser than a block of text, so matching
+       bounding boxes makes it read as the smaller, lighter side. */
+    width: 100%;
+    max-width: 35rem;
+    max-height: 74svh;
+    margin-inline: auto;
+    /* pan-y so a short window can still be scrolled from on top of the sphere */
+    touch-action: pan-y;
+    cursor: grab;
+    /* without this a drag sweeps a text selection across the labels */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .stage:active {
+    cursor: grabbing;
+  }
+
+  ul {
+    position: absolute;
+    inset: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+  }
+
+  /* Until the script runs this is a plain centred wrap, so the logos are
+     never blank and never depend on JS to be readable. */
+  li {
+    margin: 10px;
+  }
+
+  .stage[data-ready='true'] ul {
+    display: block;
+  }
+  .stage[data-ready='true'] li {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: 0;
+    will-change: transform, opacity;
+  }
+
+  a {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    color: var(--dim);
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.25s var(--ease);
+  }
+  a:hover,
+  a:focus-visible {
+    color: var(--cy);
+  }
+  a:hover span,
+  a:focus-visible span {
+    color: var(--cy);
+  }
+
+  li svg {
+    width: 40px;
+    height: 40px;
+    display: block;
+  }
+  li span {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--dimmer);
+    white-space: nowrap;
+    transition: color 0.25s var(--ease);
+  }
+
+  /* Once the columns stack there is no room left: showing the sphere pushes
+     the page past one screen, and the cloud overlaps itself at phone width
+     anyway. The page is meant to fit one screen, so it goes. The custom
+     element checks its own box, so the chunk is never fetched here either. */
+  @media (max-width: 900px) {
+    .stage {
+      display: none;
+    }
+  }
+</style>

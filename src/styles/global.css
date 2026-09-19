@@ -1,0 +1,145 @@
+/* ─────────────────────────────────────────────────────────────
+   Tokens. Dark is the default; light mirrors it.
+
+   Resolution order:
+     :root                          -> dark
+     prefers light + not forced dark -> light
+     [data-theme="light"]           -> light (forced)
+     [data-theme="dark"]            -> dark  (forced)
+   ───────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+
+  --bg: #04060c;
+  --bg-raised: rgba(255, 255, 255, 0.025);
+  --line: rgba(150, 180, 255, 0.12);
+  --line-strong: rgba(150, 180, 255, 0.24);
+
+  --txt: #e7edfb;
+  --dim: #8593b0;
+  --dimmer: #59637d;
+
+  --cy: #2fe6ff;
+  --vi: #8b5cff;
+  --mg: #ff4fd8;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+
+    --bg: #f5f6fa;
+    --bg-raised: rgba(255, 255, 255, 0.72);
+    --line: rgba(18, 28, 58, 0.14);
+    --line-strong: rgba(18, 28, 58, 0.26);
+
+    --txt: #0b1020;
+    --dim: #4d5772;
+    --dimmer: #7b8499;
+
+    --cy: #0093b8;
+    --vi: #6134d8;
+    --mg: #c41b92;
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f5f6fa;
+  --bg-raised: rgba(255, 255, 255, 0.72);
+  --line: rgba(18, 28, 58, 0.14);
+  --line-strong: rgba(18, 28, 58, 0.26);
+
+  --txt: #0b1020;
+  --dim: #4d5772;
+  --dimmer: #7b8499;
+
+  --cy: #0093b8;
+  --vi: #6134d8;
+  --mg: #c41b92;
+}
+
+:root {
+  --ramp: linear-gradient(100deg, var(--cy) 0%, var(--vi) 52%, var(--mg) 100%);
+
+  --font-cjk: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    'Noto Sans SC', sans-serif;
+  --sans: var(--font-display), var(--font-cjk);
+  --mono: var(--font-mono), var(--font-cjk);
+
+  --gut: clamp(20px, 5vw, 64px);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  /* No transition here. Animating the `background` shorthand latches onto the
+     old computed value and never picks up a var() change, so the page stays
+     the old colour when the theme flips. */
+}
+
+::selection {
+  background: var(--vi);
+  color: #fff;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--cy);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  background: var(--txt);
+  color: var(--bg);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 10px 16px;
+}
+.skip:focus {
+  left: 12px;
+  top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

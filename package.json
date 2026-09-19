@@ -1,0 +1,26 @@
+{
+  "name": "jat001.com",
+  "type": "module",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm run build:tools && astro dev",
+    "check": "pnpm run build:tools && astro check",
+    "build": "pnpm run check && astro build",
+    "preview": "pnpm run build && astro preview",
+    "build:tools": "node scripts/build-tools.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^24.13.6",
+    "devicon": "^2.17.0",
+    "simple-icons": "^16.31.0",
+    "typescript": "^7.0.2"
+  }
+}

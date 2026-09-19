@@ -1,0 +1,112 @@
+---
+/** Top-left corner. The only chrome on the page. */
+---
+
+<theme-toggle>
+  <button class="toggle" type="button" aria-label="Switch between light and dark">
+    <svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14">
+      <path
+        class="sun"
+        fill="currentColor"
+        d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-13.5a1 1 0 0 1 1 1V6a1 1 0 1 1-2 0V4.5a1 1 0 0 1 1-1Zm0 15a1 1 0 0 1 1 1V21a1 1 0 1 1-2 0v-1.5a1 1 0 0 1 1-1ZM3.5 12a1 1 0 0 1 1-1H6a1 1 0 1 1 0 2H4.5a1 1 0 0 1-1-1Zm15 0a1 1 0 0 1 1-1H21a1 1 0 1 1 0 2h-1.5a1 1 0 0 1-1-1ZM5.6 5.6a1 1 0 0 1 1.4 0l1.1 1.1a1 1 0 0 1-1.4 1.4L5.6 7a1 1 0 0 1 0-1.4Zm10.3 10.3a1 1 0 0 1 1.4 0l1.1 1.1a1 1 0 0 1-1.4 1.4l-1.1-1.1a1 1 0 0 1 0-1.4Zm2.5-10.3a1 1 0 0 1 0 1.4L17.3 8.1a1 1 0 1 1-1.4-1.4L17 5.6a1 1 0 0 1 1.4 0ZM8.1 15.9a1 1 0 0 1 0 1.4L7 18.4a1 1 0 0 1-1.4-1.4l1.1-1.1a1 1 0 0 1 1.4 0Z"
+      ></path>
+      <path class="moon" fill="currentColor" d="M21 13.3A9 9 0 1 1 10.7 3a7 7 0 1 0 10.3 10.3Z"
+      ></path>
+    </svg>
+  </button>
+</theme-toggle>
+
+<script>
+  type Theme = 'light' | 'dark';
+  const STORAGE_KEY = 'theme';
+
+  const systemTheme = (): Theme =>
+    window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+
+  /** `document.documentElement` is the one global here by necessity: the theme
+   *  is a root attribute that the whole token sheet keys off. */
+  const currentTheme = (): Theme => {
+    const forced = document.documentElement.dataset.theme;
+    return forced === 'light' || forced === 'dark' ? forced : systemTheme();
+  };
+
+  class ThemeToggle extends HTMLElement {
+    #button: HTMLElement | null = null;
+
+    connectedCallback() {
+      this.#button = this.querySelector('button');
+      this.#button?.addEventListener('click', this.#toggle);
+    }
+
+    disconnectedCallback() {
+      this.#button?.removeEventListener('click', this.#toggle);
+      this.#button = null;
+    }
+
+    #toggle = () => {
+      const next: Theme = currentTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try {
+        // back on the system default? stop overriding it
+        if (next === systemTheme()) localStorage.removeItem(STORAGE_KEY);
+        else localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        /* private mode — the toggle still works for this page view */
+      }
+    };
+  }
+
+  // HMR can re-run this module; defining twice throws
+  if (!customElements.get('theme-toggle')) {
+    customElements.define('theme-toggle', ThemeToggle);
+  }
+</script>
+
+<style>
+  /* the wrapper must not disturb the fixed button it holds */
+  theme-toggle {
+    display: contents;
+  }
+
+  .toggle {
+    position: fixed;
+    top: clamp(16px, 3.4vh, 28px);
+    left: var(--gut);
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--bg-raised);
+    backdrop-filter: blur(10px);
+    color: var(--dim);
+    cursor: pointer;
+    transition:
+      color 0.3s,
+      border-color 0.3s;
+  }
+  .toggle:hover {
+    color: var(--cy);
+    border-color: var(--cy);
+  }
+
+  /* show the icon for the theme you would switch TO */
+  .moon {
+    display: none;
+  }
+  :global(:root:not([data-theme='light'])) .moon {
+    display: inline;
+  }
+  :global(:root:not([data-theme='light'])) .sun {
+    display: none;
+  }
+  :global(:root[data-theme='light']) .sun {
+    display: inline;
+  }
+  :global(:root[data-theme='light']) .moon {
+    display: none;
+  }
+</style>

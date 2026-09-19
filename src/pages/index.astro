@@ -1,0 +1,43 @@
+---
+/** One screen: name and contact on the left, the language sphere on the right. */
+import Footer from '../components/Footer.astro';
+import Hero from '../components/Hero.astro';
+import Sphere from '../components/Sphere.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import Base from '../layouts/Base.astro';
+---
+
+<Base>
+  <main id="main">
+    <Hero />
+    <Sphere />
+  </main>
+  <ThemeToggle />
+  <Footer />
+</Base>
+
+<style>
+  main {
+    min-height: 100svh;
+    /* Deliberately narrow: the two columns should read as one composition
+       rather than drifting to opposite edges of a wide screen. */
+    width: min(100%, 75rem);
+    margin-inline: auto;
+    padding: clamp(32px, 6vh, 64px) var(--gut) clamp(76px, 12vh, 104px);
+    display: grid;
+    /* An explicit track for the sphere. `auto` collapses it to zero: the
+       stage sizes itself as a percentage of the track, and the track sizes
+       itself from the stage. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, clamp(17rem, 40vw, 35rem));
+    align-items: center;
+    gap: clamp(20px, 4vw, 64px);
+  }
+
+  @media (max-width: 900px) {
+    main {
+      grid-template-columns: minmax(0, 1fr);
+      gap: clamp(28px, 6vh, 48px);
+      align-content: center;
+    }
+  }
+</style>
