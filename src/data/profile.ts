@@ -11,13 +11,10 @@ export const profile = {
   locale: 'en',
   /** Origin, used for canonical and og:url. */
   url: 'https://jat001.com',
-  /** Served from public/. */
   icon: '/avatar.svg',
-  /** Social card image, served from public/. Square on purpose — that is what
-   *  `twitter:card` `summary` expects. Its dimensions are read from the file
-   *  at build time, so swapping it needs no change here. */
+  /** Square on purpose — `twitter:card` `summary` expects it. Dimensions are
+   *  read from the file at build time, so swapping it needs no change here. */
   socialImage: '/avatar.png',
-  /** This site's own source. */
   repo: 'https://github.com/jat001/jat001.com',
 
   links: [
@@ -34,5 +31,4 @@ export const profile = {
   },
 } as const;
 
-/** "Jat — Coding for fun." */
 export const title = `${profile.name} — ${profile.tagline}`;

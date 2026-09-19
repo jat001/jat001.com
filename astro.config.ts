@@ -1,7 +1,6 @@
 import { defineConfig, fontProviders } from 'astro/config'
 import { profile } from './src/data/profile'
 
-// https://astro.build/config
 export default defineConfig({
   site: profile.url,
 
@@ -9,7 +8,7 @@ export default defineConfig({
   // phone on the same network. Dev and preview only — `astro build` is unaffected.
   server: { host: true },
 
-  // Self-hosted, subset and preloaded — no third-party font request at runtime.
+  // Self-hosted: no third-party font request at runtime.
   fonts: [
     {
       provider: fontProviders.fontsource(),

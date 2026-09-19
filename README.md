@@ -12,7 +12,7 @@ of language logos on the right. Light and dark.
 | Styles | Astro scoped CSS + custom-property tokens (`src/styles/global.css`) |
 | Fonts  | Astro `fonts` API via Fontsource, self-hosted and subset            |
 
-Shipped to the browser: **2.6 KB of JavaScript** and **2.0 KB of CSS**, gzipped.
+Shipped to the browser: **2.3 KB of JavaScript** and **2.0 KB of CSS**, gzipped.
 `devicon`, `simple-icons` and `@types/node` are dev dependencies only — their
 output is inlined at build time and none of them reach the browser.
 
@@ -79,7 +79,7 @@ Pointer events routinely outpace frames — 120Hz against 60Hz — and integrati
 only the newest delta once per frame threw the rest of the travel away.
 
 > An earlier version used Three.js sprites. It cost **143.9 KB gzipped** to draw
-> the logos on a ball, versus 1.3 KB this way.
+> the logos on a ball, versus 1.2 KB this way.
 
 ## The languages
 

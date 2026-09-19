@@ -14,23 +14,6 @@ const IDLE_SPIN = 0.0022;
 const DRAG_SPEED = 0.008;
 /** Ceiling on the spin a flick can leave behind, in radians per frame. */
 const MAX_THROW = 0.08;
-/**
- * How hard points are pulled in off the shell.
- *
- * A sphere with points only on its surface projects with density ∝ 1/cos θ,
- * so they pile up along the silhouette and leave the middle bare. Spreading
- * the radii through the volume flattens that, but costs symmetry: the harder
- * the pull, the further the projected centroid wanders off centre.
- *
- *   falloff   rim/centre density   centroid offset
- *   0             3.8                   0.4%
- *   0.12          1.7                   1.3%
- *   0.20          1.2                   1.9%
- *
- * Set to 0: an even shell reads as tidier than a filled middle, and only a
- * shell is truly symmetric.
- */
-const RADIUS_FALLOFF = 0;
 
 export function initSphere(stage: HTMLElement): () => void {
   const items = [...stage.querySelectorAll<HTMLElement>('[data-language]')];
@@ -44,27 +27,14 @@ export function initSphere(stage: HTMLElement): () => void {
   // two logos would sit perfectly still while everything else turns.
   const golden = Math.PI * (3 - Math.sqrt(5));
 
-  // Radii walk the strata in a stride coprime with the count, so no two points
-  // share a depth and the sequence never lines up with the golden angle. A
-  // plain `frac(i * 0.618)` does line up — 0.618 and the golden angle's 0.382
-  // turns sum to exactly 1 — which makes radius a function of azimuth and
-  // winds the cloud into one lopsided spiral. Inert while RADIUS_FALLOFF is 0.
-  const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
-  let stride = 1;
-  for (let k = 7; k < items.length; k++) {
-    if (gcd(k, items.length) === 1) {
-      stride = k;
-      break;
-    }
-  }
-
+  // Points stay on the shell. Spreading the radii through the volume evens out
+  // the rim-heavy projected density (∝ 1/cos θ) but drags the centroid off
+  // centre, which reads as lopsided — tried, and worse.
   const points = items.map((_, i) => {
     const y = 1 - (2 * i + 1) / items.length;
     const r = Math.sqrt(Math.max(0, 1 - y * y));
     const theta = golden * i;
-    const spread = (((i * stride) % items.length) + 0.5) / items.length;
-    const s = spread ** RADIUS_FALLOFF;
-    return { x: Math.cos(theta) * r * s, y: y * s, z: Math.sin(theta) * r * s };
+    return { x: Math.cos(theta) * r, y, z: Math.sin(theta) * r };
   });
 
   // Shuffle which logo lands in which slot so the sphere is laid out
@@ -148,8 +118,7 @@ export function initSphere(stage: HTMLElement): () => void {
     // only the newest delta once per frame discarded the rest of the travel,
     // which is what made dragging feel sluggish rather than merely slow.
     const stepY = dx * DRAG_SPEED;
-    // dy counts downwards and so does rotX, so pulling down tips the near
-    // face down. Negating here is what made it feel inverted.
+    // dy counts downwards and so does rotX, so pulling down tips the near face down
     const stepX = dy * DRAG_SPEED;
     rotY += stepY;
     rotX = clampTilt(rotX + stepX);
