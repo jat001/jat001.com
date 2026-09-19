@@ -27,9 +27,6 @@ export function initSphere(stage: HTMLElement): () => void {
   // two logos would sit perfectly still while everything else turns.
   const golden = Math.PI * (3 - Math.sqrt(5));
 
-  // Points stay on the shell. Spreading the radii through the volume evens out
-  // the rim-heavy projected density (∝ 1/cos θ) but drags the centroid off
-  // centre, which reads as lopsided — tried, and worse.
   const points = items.map((_, i) => {
     const y = 1 - (2 * i + 1) / items.length;
     const r = Math.sqrt(Math.max(0, 1 - y * y));
