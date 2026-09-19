@@ -13,15 +13,12 @@
 </theme-toggle>
 
 <script>
-  type Theme = 'light' | 'dark';
-  const STORAGE_KEY = 'theme';
-
   /** Asks for dark rather than light, so a browser that answers neither lands
    *  on light — the same fallback the token sheet uses. */
-  const systemTheme = (): Theme =>
+  const systemTheme = () =>
     window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
-  const currentTheme = (): Theme => {
+  const currentTheme = () => {
     const forced = document.documentElement.dataset.theme;
     return forced === 'light' || forced === 'dark' ? forced : systemTheme();
   };
@@ -40,10 +37,12 @@
     }
 
     #toggle = () => {
-      const next: Theme = currentTheme() === 'dark' ? 'light' : 'dark';
+      const next = currentTheme() === 'dark' ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
       try {
-        localStorage.setItem(STORAGE_KEY, next);
+        /** Must stay identical to the key in the inline head script in Base.astro,
+         *  which cannot import it. Change both together. */
+        localStorage.setItem('theme', next);
       } catch {
         /* private mode — the toggle still works for this page view */
       }

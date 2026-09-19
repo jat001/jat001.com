@@ -52,7 +52,9 @@ const personSchema = {
     <link rel="canonical" href={canonical.href} />
 
     {/* Applies a stored choice before first paint, so a reload never flashes
-        the other theme first. */}
+        the other theme first. The key is spelled out again here because an
+        inline script cannot import: it must stay identical to STORAGE_KEY in
+        ThemeToggle.astro, or a stored choice is never read back. */}
     <script is:inline>
       try {
         const saved = localStorage.getItem('theme');
