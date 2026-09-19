@@ -153,10 +153,10 @@ Builds. That runs over Cloudflare's GitHub App, so nothing is stored in the
 repo and no API token is involved. Build settings live in the dashboard, not
 in `wrangler.toml`, which Workers Builds ignores for that purpose:
 
-| setting        | value                               |
-| -------------- | ----------------------------------- |
-| Build command  | `pnpm run build`                    |
-| Deploy command | `npx wrangler deploy` (the default) |
+| setting        | value                      |
+| -------------- | -------------------------- |
+| Build command  | `pnpm run build`           |
+| Deploy command | `pnpm dlx wrangler deploy` |
 
 `wrangler deploy` from a checkout works too, for a manual push.
 
