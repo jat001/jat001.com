@@ -50,8 +50,8 @@ scripts/
   build-languages.mjs   WakaTime + icons -> src/data/languages.ts
 ```
 
-The only copy outside `profile.ts` is interface text: `Skip to content`, the
-two `aria-label`s, and the three lines on the 404 page.
+The only copy outside `profile.ts` is interface text: the two hard-coded
+`aria-label`s and the three lines on the 404 page.
 
 ## The sphere
 

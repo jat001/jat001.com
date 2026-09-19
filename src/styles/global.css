@@ -118,22 +118,6 @@ a {
   border-radius: 2px;
 }
 
-.skip {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  z-index: 200;
-  background: var(--txt);
-  color: var(--bg);
-  font-family: var(--mono);
-  font-size: 12px;
-  padding: 10px 16px;
-}
-.skip:focus {
-  left: 12px;
-  top: 12px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
