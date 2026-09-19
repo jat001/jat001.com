@@ -9,8 +9,10 @@
  *   1. over an hour of tracked time on WakaTime, and
  *   2. an icon exists in devicon or simple-icons.
  *
- * Run it by hand when the numbers should be refreshed. It is deliberately NOT
- * part of `build`, so a WakaTime outage can never break a deploy.
+ * `dev`, `check`, `build` and `preview` each run this first, so the list is
+ * never stale. The cost is that all four need WakaTime reachable: the fetch
+ * below throws on failure, and src/data/tools.ts is gitignored, so a fresh
+ * clone has no copy to fall back on.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

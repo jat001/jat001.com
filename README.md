@@ -19,11 +19,16 @@ output is inlined at build time and none of them reach the browser.
 ## Commands
 
 ```sh
-pnpm dev           # dev server
-pnpm build         # astro check && astro build
-pnpm preview       # serve dist/
+pnpm dev           # regenerate tools, then dev server
+pnpm check         # regenerate tools, then astro check
+pnpm build         # check, then astro build
+pnpm preview       # build, then serve dist/
 pnpm build:tools   # regenerate src/data/tools.ts from WakaTime
 ```
+
+`src/data/tools.ts` is generated and gitignored, and every entry point above
+regenerates it, so **all of them need WakaTime reachable** — including offline
+development. A fresh clone has no copy to fall back on.
 
 `server.host` is set in the config, so both `dev` and `preview` listen on every
 interface and can be opened from a phone on the same network.
