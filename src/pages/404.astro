@@ -1,0 +1,71 @@
+---
+import Footer from '../components/Footer.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import Base from '../layouts/Base.astro';
+import { profile } from '../data/profile';
+---
+
+<Base title={`404 — ${profile.name}`} noindex>
+  <main id="main">
+    <h1 class="code">404</h1>
+    <p class="line">Nothing here.</p>
+    <a class="back" href="/">Home</a>
+  </main>
+  <ThemeToggle />
+  <Footer />
+</Base>
+
+<style>
+  main {
+    min-height: 100svh;
+    width: min(100%, 75rem);
+    margin-inline: auto;
+    padding: clamp(32px, 6vh, 64px) var(--gut) clamp(76px, 12vh, 104px);
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .code {
+    font-size: clamp(64px, 14vw, 220px);
+    font-weight: 600;
+    line-height: 0.84;
+    letter-spacing: -0.05em;
+    /* glyphs overflow the 0.84 line box; pad it back so the block centres */
+    padding-top: 0.22em;
+    /* the negative tracking is applied after the last 4 as well, so the box
+       ends inside the ink and centring it leaves the mark 0.05em right of
+       true; add the one gap back */
+    margin-right: 0.05em;
+    background: var(--ramp);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .line {
+    font-size: clamp(18px, 2vw, 28px);
+    font-weight: 300;
+    letter-spacing: -0.015em;
+    color: var(--dim);
+    margin-top: 30px;
+  }
+
+  .back {
+    margin-top: 44px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--dimmer);
+    border-bottom: 1px solid transparent;
+    transition:
+      color 0.3s,
+      border-color 0.3s;
+  }
+  .back:hover,
+  .back:focus-visible {
+    color: var(--cy);
+    border-bottom-color: var(--cy);
+  }
+</style>

@@ -6,6 +6,16 @@ import { profile, title } from '../data/profile';
 import { languages } from '../data/languages';
 import '../styles/global.css';
 
+interface Props {
+  title?: string;
+  /** Drops the canonical, the social cards and the Person schema, and asks not
+   *  to be indexed. All three describe the home page; on a page that does not
+   *  exist they would be claims about nothing. */
+  noindex?: boolean;
+}
+
+const { title: pageTitle = title, noindex = false } = Astro.props;
+
 const canonical = new URL('/', Astro.site ?? profile.url);
 
 /** A PNG carries its dimensions in the IHDR chunk: an 8-byte signature, then
@@ -49,7 +59,7 @@ const personSchema = {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href={profile.icon} />
-    <link rel="canonical" href={canonical.href} />
+    {!noindex && <link rel="canonical" href={canonical.href} />}
 
     {/* Applies a stored choice before first paint, so a reload never flashes
         the other theme first. The key is spelled out again here because an
@@ -64,35 +74,43 @@ const personSchema = {
       } catch {}
     </script>
 
-    <title>{title}</title>
-    <meta name="description" content={profile.description} />
-
-    <meta property="og:type" content="profile" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={profile.description} />
-    <meta property="og:url" content={canonical.href} />
-    <meta property="og:site_name" content={profile.name} />
-    <meta property="og:image" content={socialImage} />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content={String(socialSize.width)} />
-    <meta property="og:image:height" content={String(socialSize.height)} />
-    <meta property="og:image:alt" content={profile.name} />
-
-    {/* `summary`, not `summary_large_image`: the image is square, and the
-        large card crops to about 2:1, which would cut the top and bottom off. */}
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:image" content={socialImage} />
+    <title>{pageTitle}</title>
+    {noindex && <meta name="robots" content="noindex" />}
 
     {/* Dark carries the query and light does not: a browser that reports no
         preference skips the first and takes light, as the token sheet does. */}
     <meta name="theme-color" content="#04060c" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f5f6fa" />
 
-    <script
-      type="application/ld+json"
-      is:inline
-      set:html={JSON.stringify(personSchema)}
-    />
+    {
+      !noindex && (
+        <>
+          <meta name="description" content={profile.description} />
+
+          <meta property="og:type" content="profile" />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={profile.description} />
+          <meta property="og:url" content={canonical.href} />
+          <meta property="og:site_name" content={profile.name} />
+          <meta property="og:image" content={socialImage} />
+          <meta property="og:image:type" content="image/png" />
+          <meta property="og:image:width" content={String(socialSize.width)} />
+          <meta property="og:image:height" content={String(socialSize.height)} />
+          <meta property="og:image:alt" content={profile.name} />
+
+          {/* `summary`, not `summary_large_image`: the image is square, and the
+              large card crops to about 2:1, which would cut the top and bottom off. */}
+          <meta name="twitter:card" content="summary" />
+          <meta name="twitter:image" content={socialImage} />
+
+          <script
+            type="application/ld+json"
+            is:inline
+            set:html={JSON.stringify(personSchema)}
+          />
+        </>
+      )
+    }
 
     <Font cssVariable="--font-display" preload />
     <Font cssVariable="--font-mono" preload />

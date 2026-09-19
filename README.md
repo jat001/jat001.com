@@ -43,15 +43,15 @@ src/
   components/   Hero (left), Sphere (right), ThemeToggle, Footer
   data/         profile.ts — all the copy; languages.ts — GENERATED
   layouts/      Base.astro — head, meta, fonts, no-flash theme script
-  pages/        index.astro — the page itself: composition and grid
+  pages/        index.astro — the page itself; 404.astro
   scripts/      sphere.ts — the 3D, dynamically imported
   styles/       global.css — tokens for both themes
 scripts/
   build-languages.mjs   WakaTime + icons -> src/data/languages.ts
 ```
 
-The only copy outside `profile.ts` is the interface strings: `Skip to
-content` and the two `aria-label`s.
+The only copy outside `profile.ts` is interface text: `Skip to content`, the
+two `aria-label`s, and the three lines on the 404 page.
 
 ## The sphere
 
@@ -158,7 +158,9 @@ in `wrangler.toml`, which Workers Builds ignores for that purpose:
 | Build command  | `pnpm run build`      |
 | Deploy command | `pnx wrangler deploy` |
 
-`wrangler deploy` from a checkout works too, for a manual push.
+`not_found_handling` points unmatched paths at `404.html` and answers with a
+real 404; Pages serves that file with a 404 of its own, so neither needs a
+redirect. `wrangler deploy` from a checkout works too, for a manual push.
 
 **GitHub Pages.** `.github/workflows/pages.yml` builds on every push to `main`
 and hands the artefact to `actions/deploy-pages`. Set the Pages source to
