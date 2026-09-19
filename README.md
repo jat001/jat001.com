@@ -13,8 +13,8 @@ of language logos on the right. Light and dark.
 | Fonts  | Astro `fonts` API via Fontsource, self-hosted and subset            |
 
 Shipped to the browser: **2.3 KB of JavaScript** and **2.0 KB of CSS**, gzipped.
-`devicon`, `simple-icons` and `@types/node` are dev dependencies only — their
-output is inlined at build time and none of them reach the browser.
+`devicon` and `simple-icons` are dev dependencies: their paths are inlined at
+build time, so neither library reaches the browser.
 
 ## Commands
 
@@ -27,8 +27,8 @@ pnpm build:languages   # regenerate src/data/languages.ts from WakaTime
 ```
 
 `src/data/languages.ts` is generated and gitignored, and every entry point
-above regenerates it, so **all of them need WakaTime reachable** — including
-offline development. A fresh clone has no copy to fall back on.
+above regenerates it, so **all of them need WakaTime reachable**. A fresh
+clone has no copy to fall back on.
 
 `server.host` is set in the config, so both `dev` and `preview` listen on every
 interface and can be opened from a phone on the same network.
@@ -50,8 +50,8 @@ scripts/
   build-languages.mjs   WakaTime + icons -> src/data/languages.ts
 ```
 
-Copy lives in `src/data/profile.ts`; only the interface strings (`Skip to
-content`, the two `aria-label`s) sit in their components.
+The only copy outside `profile.ts` is the interface strings: `Skip to
+content` and the two `aria-label`s.
 
 ## The sphere
 
@@ -68,15 +68,7 @@ Idle it turns slowly; drag to spin it. The loop runs **only** while the sphere
 is on screen and the tab is visible, and the element watches its own box, so
 below 900px — where CSS hides it — the chunk is never even fetched.
 
-Every logo links to `wakatime.com/@Jat`. Because a drag would otherwise end in
-a navigation, pointer travel over 4px marks the gesture as a drag and the click
-that follows is swallowed in the capture phase. There is deliberately no
-`setPointerCapture`: capturing retargets the click to the stage, which would
-stop taps ever reaching the links.
-
-Dragging applies its rotation in `pointermove`, not in the animation loop.
-Pointer events routinely outpace frames — 120Hz against 60Hz — and integrating
-only the newest delta once per frame threw the rest of the travel away.
+Every logo links to `wakatime.com/@Jat`, and a drag does not navigate.
 
 > An earlier version used Three.js sprites. It cost **143.9 KB gzipped** to draw
 > the logos on a ball, versus 1.2 KB this way.
@@ -104,19 +96,13 @@ which entries cleared an hour but have no icon anywhere.
 
 ### Icons
 
-Neither library covers this list alone, so both are used and their baked `fill`
-attributes are stripped so everything renders as `currentColor`. Preference
-order is devicon `plain` → simple-icons → devicon `line`/`original`, because
-the grid tints with `currentColor` and the last step is throwing away colours
-somebody chose.
+Neither library covers the list alone, so both are used, with their baked
+`fill` attributes stripped so everything tints with `currentColor`. Preference
+runs devicon `plain` → simple-icons → devicon `line`/`original`, keeping the
+coloured variants last: tinting one throws away colours somebody chose.
 
-- **devicon** is the only source for Bash, C#, Groovy, Java, Objective-C and
-  PowerShell. (simple-icons files Bash under "GNU Bash", which does not match.)
-- **simple-icons** is the only source for CocoaPods, CSS and TOML, and also
-  supplies C, CoffeeScript, Markdown and Rust, which devicon ships without a
-  `plain` variant.
-- `devicon.json` under-reports: some icons ship a `plain` file it does not
-  list, so the generator checks the disk before giving up.
+`devicon.json` under-reports — some icons ship a `plain` file it does not
+list — so the generator checks the disk before giving up.
 
 **SQL has no language mark in either library** — only products (MySQL,
 PostgreSQL, SQL Server…). `ICON_OVERRIDE` points it at devicon's
@@ -137,10 +123,6 @@ prefers light + not forced dark  -> light
 
 An inline script in `<head>` applies a stored override before first paint, so
 reloading in light mode never flashes dark.
-
-> `body` must **not** have `transition: background`. Animating the shorthand
-> latches onto the old computed value and never picks up a `var()` change, so
-> the page keeps the old colour when the theme flips.
 
 ## Layout
 
