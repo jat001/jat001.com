@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Font } from 'astro:assets';
 import { profile, title } from '../data/profile';
-import { tools } from '../data/tools';
+import { languages } from '../data/languages';
 import '../styles/global.css';
 
 const canonical = new URL('/', Astro.site ?? profile.url);
@@ -39,7 +39,7 @@ const personSchema = {
   image: socialImage,
   email: profile.links.find((l) => l.href.startsWith('mailto:'))?.href,
   sameAs: profile.links.filter((l) => l.href.startsWith('http')).map((l) => l.href),
-  knowsAbout: tools.map((tool) => tool.label),
+  knowsAbout: languages.map((language) => language.label),
 };
 ---
 

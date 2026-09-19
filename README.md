@@ -1,7 +1,7 @@
 # jat001.com
 
 Personal site. **One screen**: name and contact on the left, a rotating sphere
-of tool logos on the right. Light and dark.
+of language logos on the right. Light and dark.
 
 ## Stack
 
@@ -19,16 +19,16 @@ output is inlined at build time and none of them reach the browser.
 ## Commands
 
 ```sh
-pnpm dev           # regenerate tools, then dev server
-pnpm check         # regenerate tools, then astro check
-pnpm build         # check, then astro build
-pnpm preview       # build, then serve dist/
-pnpm build:tools   # regenerate src/data/tools.ts from WakaTime
+pnpm dev               # regenerate languages, then dev server
+pnpm check             # regenerate languages, then astro check
+pnpm build             # check, then astro build
+pnpm preview           # build, then serve dist/
+pnpm build:languages   # regenerate src/data/languages.ts from WakaTime
 ```
 
-`src/data/tools.ts` is generated and gitignored, and every entry point above
-regenerates it, so **all of them need WakaTime reachable** — including offline
-development. A fresh clone has no copy to fall back on.
+`src/data/languages.ts` is generated and gitignored, and every entry point
+above regenerates it, so **all of them need WakaTime reachable** — including
+offline development. A fresh clone has no copy to fall back on.
 
 `server.host` is set in the config, so both `dev` and `preview` listen on every
 interface and can be opened from a phone on the same network.
@@ -41,13 +41,13 @@ interface and can be opened from a phone on the same network.
 ```
 src/
   components/   Hero (left), Sphere (right), ThemeToggle, Footer
-  data/         profile.ts — all the copy; tools.ts — GENERATED
+  data/         profile.ts — all the copy; languages.ts — GENERATED
   layouts/      Base.astro — head, meta, fonts, no-flash theme script
   pages/        index.astro — the page itself: composition and grid
   scripts/      sphere.ts — the 3D, dynamically imported
   styles/       global.css — tokens for both themes
 scripts/
-  build-tools.mjs   WakaTime + icon catalogues -> src/data/tools.ts
+  build-languages.mjs   WakaTime + icons -> src/data/languages.ts
 ```
 
 Copy lives in `src/data/profile.ts`; only the interface strings (`Skip to
@@ -81,15 +81,16 @@ only the newest delta once per frame threw the rest of the travel away.
 > An earlier version used Three.js sprites. It cost **143.9 KB gzipped** to draw
 > the logos on a ball, versus 1.3 KB this way.
 
-## The tools
+## The languages
 
-`src/data/tools.ts` is generated. An entry appears when it clears two bars:
+`src/data/languages.ts` is generated. An entry appears when it clears two
+bars:
 
 1. over an hour of tracked time on WakaTime, and
 2. an icon exists in devicon or simple-icons.
 
 Nothing is hand-listed. Four adjustments sit at the top of
-`scripts/build-tools.mjs`:
+`scripts/build-languages.mjs`:
 
 | constant        | why                                                                          |
 | --------------- | ---------------------------------------------------------------------------- |

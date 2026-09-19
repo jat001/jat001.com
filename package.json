@@ -7,11 +7,11 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "pnpm run build:tools && astro dev",
-    "check": "pnpm run build:tools && astro check",
+    "dev": "pnpm run build:languages && astro dev",
+    "check": "pnpm run build:languages && astro check",
     "build": "pnpm run check && astro build",
     "preview": "pnpm run build && astro preview",
-    "build:tools": "node scripts/build-tools.mjs"
+    "build:languages": "node scripts/build-languages.mjs"
   },
   "dependencies": {
     "astro": "^7.3.3"

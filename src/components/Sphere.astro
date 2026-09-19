@@ -1,26 +1,26 @@
 ---
 import { profile } from '../data/profile';
-import { tools } from '../data/tools';
+import { languages } from '../data/languages';
 ---
 
 <language-sphere class="stage">
   <ul aria-label="Languages I use">
     {
-      tools.map((tool) => (
-        <li data-tool>
+      languages.map((language) => (
+        <li data-language>
           <a
-            href={profile.languages.href}
+            href={profile.wakatime.href}
             target="_blank"
             rel="noopener noreferrer"
             draggable="false"
-            aria-label={`${tool.label} — ${profile.languages.label}`}
+            aria-label={`${language.label} — ${profile.wakatime.label}`}
           >
-            <svg viewBox={tool.viewBox} aria-hidden="true">
-              {tool.paths.map((d) => (
+            <svg viewBox={language.viewBox} aria-hidden="true">
+              {language.paths.map((d) => (
                 <path d={d} fill="currentColor" />
               ))}
             </svg>
-            <span>{tool.label}</span>
+            <span>{language.label}</span>
           </a>
         </li>
       ))

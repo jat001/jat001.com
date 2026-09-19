@@ -33,7 +33,7 @@ const MAX_THROW = 0.08;
 const RADIUS_FALLOFF = 0;
 
 export function initSphere(stage: HTMLElement): () => void {
-  const items = [...stage.querySelectorAll<HTMLElement>('[data-tool]')];
+  const items = [...stage.querySelectorAll<HTMLElement>('[data-language]')];
   if (items.length === 0) return () => {};
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');

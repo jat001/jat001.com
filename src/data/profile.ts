@@ -26,8 +26,9 @@ export const profile = {
     { label: 'Email', href: 'mailto:chat@jat.email', display: 'chat@jat.email' },
   ],
 
-  /** Where the language logos point, and what their labels name. */
-  languages: {
+  /** Where the language logos point, and what their labels name. Not called
+   *  `languages`: that is the generated list, and one meaning per name. */
+  wakatime: {
     label: 'WakaTime',
     href: 'https://wakatime.com/@Jat',
   },
