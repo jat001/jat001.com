@@ -1,8 +1,13 @@
 import { defineConfig, fontProviders } from 'astro/config'
+import sitemap from '@astrojs/sitemap'
 import { profile } from './src/data/profile'
 
 export default defineConfig({
   site: profile.url,
+
+  // 404.html is emitted as a page, and a sitemap that advertises it invites
+  // crawlers to index a page that answers 404.
+  integrations: [sitemap({ filter: (page) => !page.endsWith('/404/') })],
 
   // Bind every interface (0.0.0.0 and ::), so the dev server is reachable from a
   // phone on the same network. Dev and preview only — `astro build` is unaffected.

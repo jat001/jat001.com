@@ -59,6 +59,11 @@ const personSchema = {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href={profile.icon} />
     {!noindex && <link rel="canonical" href={canonical.href} />}
+    {
+      !noindex && (
+        <link rel="alternate" type="text/markdown" href="/index.md" title={profile.name} />
+      )
+    }
 
     {/* Applies a stored choice before first paint, so a reload never flashes
         the other theme first. The key is spelled out again here because an

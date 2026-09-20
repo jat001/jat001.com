@@ -7,14 +7,19 @@ of language logos on the right. Light and dark.
 
 | Layer  | Choice                                                              |
 | ------ | ------------------------------------------------------------------- |
-| Build  | Astro 7, static output — **Astro is the only runtime dependency**   |
+| Build  | Astro 7, static output — **nothing but its output runs anywhere**   |
 | 3D     | hand-projected DOM elements, no WebGL and no 3D library             |
 | Styles | Astro scoped CSS + custom-property tokens (`src/styles/global.css`) |
 | Fonts  | Astro `fonts` API via Fontsource, self-hosted and subset            |
 
 Shipped to the browser: **2.2 KB of JavaScript** and **2.0 KB of CSS**, gzipped.
-`devicon` and `simple-icons` are dev dependencies: their paths are inlined at
-build time, so neither library reaches the browser.
+`devicon` and `simple-icons` are read only by the generator; their paths are
+inlined at build time, so neither library reaches the browser.
+
+Everything is in `dependencies` and there are no `devDependencies`. Nothing
+here is published to a registry, so npm's runtime/development split has no
+consumer to serve; what matters is that a host doing a production-only
+install can still produce `dist/`. Astro's own templates do the same.
 
 ## Commands
 
