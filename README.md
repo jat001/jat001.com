@@ -23,12 +23,16 @@ pnpm dev               # regenerate languages, then dev server
 pnpm check             # regenerate languages, then astro check
 pnpm build             # check, then astro build
 pnpm preview           # build, then serve dist/
-pnpm build:languages   # regenerate src/data/languages.ts from WakaTime
+pnpm build:languages   # refresh src/data/languages.ts if it is over 12 h old
 ```
 
-`src/data/languages.ts` is generated and gitignored, and every entry point
-above regenerates it, so **all of them need WakaTime reachable**. A fresh
-clone has no copy to fall back on.
+`src/data/languages.ts` is generated and gitignored. Every entry point above
+refreshes it, but only if the copy on disk is **over 12 h old** — the age comes
+from the `Generated:` timestamp in its own header, not the file's mtime, which
+a checkout would reset. So a working tree reaches WakaTime about twice a day,
+and `--force` whenever you want it now. A fresh clone has no copy at all and
+must reach WakaTime; if it cannot, the fetch throws and the build fails rather
+than shipping a stale list.
 
 `server.host` is set in the config, so both `dev` and `preview` listen on every
 interface and can be opened from a phone on the same network.
@@ -85,12 +89,13 @@ bars:
 1. over an hour of tracked time on WakaTime, and
 2. an icon exists in devicon or simple-icons.
 
-Nothing is hand-listed. Four adjustments sit at the top of
+Nothing is hand-listed. Five adjustments sit at the top of
 `scripts/build-languages.mjs`:
 
 | constant        | why                                                                          |
 | --------------- | ---------------------------------------------------------------------------- |
 | `MIN_SECONDS`   | WakaTime logs seconds for any file merely opened                             |
+| `MAX_AGE_HOURS` | how long a generated list counts as current                                  |
 | `ALIAS`         | `Vue`/`Vue.js` and `HTML`/`HTML5` are one thing; POSIX shells fold into Bash |
 | `EXCLUDE`       | `Xorg`, `TeX`                                                                |
 | `ICON_OVERRIDE` | `SQL` — see below                                                            |
@@ -185,7 +190,7 @@ calibrated when three cells needed 407px, and two need 272px against a
 The sphere's track reaches its `35rem` ceiling exactly where the shell caps
 at `75rem`. Sized in plain `vw` it kept widening after the shell had stopped,
 and the text column, being the `1fr`, paid for it: 552px of it at a 1200px
-viewport against 448px at 1920px, so the contact cells came out *wider* on
+viewport against 448px at 1920px, so the contact cells came out _wider_ on
 the smaller screen.
 
 ## Deploying
