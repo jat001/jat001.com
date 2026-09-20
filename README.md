@@ -12,7 +12,6 @@ of language logos on the right. Light and dark.
 | Styles | Astro scoped CSS + custom-property tokens (`src/styles/global.css`) |
 | Fonts  | Astro `fonts` API via Fontsource, self-hosted and subset            |
 
-Shipped to the browser: **2.2 KB of JavaScript** and **2.0 KB of CSS**, gzipped.
 `devicon` and `simple-icons` are read only by the generator; their paths are
 inlined at build time, so neither library reaches the browser.
 
@@ -103,9 +102,6 @@ cost 34 tab stops and 34 identical entries in a screen reader's link list to
 reach one destination; WakaTime sits in the contact row instead. Hover is a
 per-element state, so each logo still lights on its own — that never depended
 on the anchor.
-
-> An earlier version used Three.js sprites. It cost **143.9 KB gzipped** to draw
-> the logos on a ball, versus 1.1 KB this way.
 
 ## The languages
 
@@ -264,19 +260,18 @@ real 404; Pages serves that file with a 404 of its own, so neither needs a
 redirect. `wrangler deploy` from a checkout works too, for a manual push.
 
 > **Pages need a cache rule to be cacheable.** Enable **Respect Strong ETags**
-> in a cache rule whose condition covers the hostname you serve. Without it
-> Cloudflare rewrites HTML at the edge — 583 bytes of WebMCP and JavaScript
-> Detections, here — and a rewritten body has no length to declare, so the
-> response goes out `chunked` with no `Content-Length` and no `ETag`. Nothing
-> can then revalidate a page, and every visit spends the full 71 KB.
+> in a cache rule whose condition covers the hostname you serve. Without it,
+> anything that rewrites HTML at the edge leaves a body with no length to
+> declare, so the response goes out `chunked` with no `Content-Length` and no
+> `ETag`, and nothing can revalidate a page.
 >
-> With the rule on, `/` comes back as 71,312 bytes, the build output exactly,
-> and `If-None-Match` answers `304` in 0 bytes. Markdown, images and plain
-> text were never affected, since none of them are rewritten — which is what
-> made this look for a long time like something about HTML that could not be
-> helped. Scope it to the hostname and not to a path: a rule covering only
-> one file fixes only that file. Cache rules are zone-scoped, so the
-> `*.workers.dev` hostname cannot have one.
+> With the rule on, a page comes back byte for byte as it was built and
+> `If-None-Match` answers `304` with an empty body. Markdown, images and plain
+> text are never affected, being nothing that gets rewritten — which is what
+> makes this look for a while like something about HTML that cannot be helped.
+> Scope the rule to the hostname rather than to a path: one covering a single
+> file fixes only that file. Cache rules are zone-scoped, so a `*.workers.dev`
+> hostname cannot have one.
 
 **GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
 hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
