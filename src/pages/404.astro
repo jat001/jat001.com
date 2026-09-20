@@ -34,9 +34,8 @@ import { profile } from '../data/profile';
     letter-spacing: -0.05em;
     /* glyphs overflow the 0.84 line box; pad it back so the block centres */
     padding-top: 0.22em;
-    /* the negative tracking is applied after the last 4 as well, so the box
-       ends inside the ink and centring it leaves the mark 0.05em right of
-       true; add the one gap back */
+    /* the tracking trails the last 4 too, so centring the box alone leaves
+       the ink 0.05em right of true */
     margin-right: 0.05em;
     background: var(--ramp);
     -webkit-background-clip: text;

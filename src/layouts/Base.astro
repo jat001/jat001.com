@@ -8,9 +8,8 @@ import '../styles/global.css';
 
 interface Props {
   title?: string;
-  /** Drops the canonical, the social cards and the Person schema, and asks not
-   *  to be indexed. All three describe the home page; on a page that does not
-   *  exist they would be claims about nothing. */
+  /** The canonical, the social cards and the Person schema all describe the
+   *  home page; a page that is not it must not claim them. */
   noindex?: boolean;
 }
 

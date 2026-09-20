@@ -31,6 +31,16 @@ import { profile } from '../data/profile';
     container-type: inline-size;
   }
 
+  /* The contact panel is solid and bordered, the sphere beside it mostly air;
+     on a shared midline this column reads as the heavier one. Below 901px
+     there is no sphere to balance against, and under 700px no slack to lift
+     into without clipping the name. */
+  @media (min-width: 901px) and (min-height: 700px) {
+    .intro {
+      translate: 0 -30px;
+    }
+  }
+
   .name {
     font-size: clamp(64px, 14vw, 220px);
     font-weight: 600;
@@ -59,8 +69,8 @@ import { profile } from '../data/profile';
 
   .links {
     display: grid;
-    /* Two fixed columns, not auto-fit. Four contacts in a column this wide
-       fit three across, which leaves the fourth alone in a row of its own. */
+    /* Four contacts: auto-fit fits three across this column and drops the
+       fourth into a row of its own. */
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 62px;
     list-style: none;
@@ -95,10 +105,9 @@ import { profile } from '../data/profile';
     overflow-wrap: anywhere;
   }
 
-  /* Two up survives down to 272px — "chat@jat.email" measures 103.6px, so a
-     cell needs 136px — but a column this narrow is a phone or a small window,
-     where four half-width cells read worse than four rows. Stack them: label
-     against value, one row each. */
+  /* Two up holds down to 272px — "chat@jat.email" measures 103.6px, so a cell
+     needs 136px — but by then the column is a phone, where four half-width
+     cells read worse than four rows. */
   @container (max-width: 420px) {
     .links {
       grid-template-columns: minmax(0, 1fr);

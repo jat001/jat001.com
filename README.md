@@ -143,6 +143,12 @@ dropped rather than shrunk, so the page still fits a single screen.
 The contact row is two fixed columns, not `auto-fit`: four contacts in a
 column this wide fit three across, leaving the fourth alone in its own row.
 
+Above 900px the left column is lifted 30px. It and the sphere end up within
+25px of the same height, but a bordered panel beside a cloud that is mostly
+air reads as the heavier side on a shared midline. Narrower than that there
+is no sphere to balance against, and under 700px of height no slack to lift
+into, so the rule is scoped to both.
+
 It is governed by a **container query**, not a media query: it is squeezed by
 the sphere taking the other track, so it has to react to its own column.
 Below 420px of column it stacks into label-against-value rows, which
