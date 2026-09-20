@@ -12,13 +12,13 @@
 /** `text/markdown` as a whole media type, not a substring of another one. */
 const WANTS_MARKDOWN = /(?:^|,)\s*text\/markdown\s*(?:;|,|$)/i;
 
-/** The asset store labels HTML `text/html` with no encoding. Browsers fall
- *  back to the `<meta charset>`, but the header should not need rescuing. */
-function labelEncoding(response) {
-  const type = response.headers.get('Content-Type') ?? '';
-  if (type.startsWith('text/html') && !type.includes('charset')) {
-    response.headers.set('Content-Type', 'text/html; charset=utf-8');
-  }
+/**
+ * Every response from here is one of two types, so both are stated rather than
+ * patched: the asset store answers HTML with no encoding at all, and it has no
+ * way to know that index.md is standing in for the page.
+ */
+function labelEncoding(response, type) {
+  response.headers.set('Content-Type', `${type}; charset=utf-8`);
   return response;
 }
 
@@ -31,7 +31,8 @@ export default {
       // Asked for as `/404`: html_handling drops the extension, so the asset
       // store answers the spelled-out path with a redirect and no body at all.
       const asset = await get('/404');
-      return labelEncoding(new Response(asset.body, { status: 404, headers: asset.headers }));
+      const response = new Response(asset.body, { status: 404, headers: asset.headers });
+      return labelEncoding(response, 'text/html');
     }
 
     const markdown = WANTS_MARKDOWN.test(request.headers.get('accept') ?? '');
@@ -41,9 +42,6 @@ export default {
     // Two representations answer to one URL, so a shared cache that ignored
     // Accept would hand the page to an agent, or the Markdown to a browser.
     response.headers.set('Vary', 'Accept');
-    if (markdown) {
-      response.headers.set('Content-Type', 'text/markdown; charset=utf-8');
-    }
-    return labelEncoding(response);
+    return labelEncoding(response, markdown ? 'text/markdown' : 'text/html');
   },
 };
