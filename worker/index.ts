@@ -45,18 +45,8 @@ export default {
       return env.ASSETS.fetch(validators ? new Request(url, request) : url);
     };
 
-    /**
-     * Read the body out before answering, rather than piping it through.
-     *
-     * A `ReadableStream` body goes out `Transfer-Encoding: chunked`, and with
-     * no length to state Cloudflare drops `Content-Length`, and the `ETag`
-     * with it. That is what leaves a page unable to revalidate: the client
-     * never receives a validator, so every visit carries the whole 71 KB
-     * again. Buffered, the length is known and the validator survives. These
-     * are pages, and the largest is a long way under a megabyte.
-     */
-    const answer = async (asset: Response, type: string, status?: number) => {
-      const response = new Response(await asset.arrayBuffer(), {
+    const answer = (asset: Response, type: string, status?: number) => {
+      const response = new Response(asset.body, {
         status: status ?? asset.status,
         headers: asset.headers,
       });

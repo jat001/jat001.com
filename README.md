@@ -242,14 +242,13 @@ in `wrangler.toml`, which Workers Builds ignores for that purpose:
 real 404; Pages serves that file with a 404 of its own, so neither needs a
 redirect. `wrangler deploy` from a checkout works too, for a manual push.
 
-> Live, the pages come back `Transfer-Encoding: chunked` with no `Content-Length`
-> and no `ETag`, so nothing can revalidate them and a repeat visit carries all
-> 71 KB again. Everything that is not HTML gets both and answers 304. The
-> Worker buffers each body before answering, since a streamed one is what
-> forces chunked, and forwards the caller's validators so the asset store can
-> answer 304 at all — but whether that is enough only production can say:
-> `wrangler dev` sends chunked for the page either way, and sends the `ETag`
-> either way.
+> Live, the asset store hands back no `ETag` and no `Content-Length` for HTML,
+> so nothing can revalidate a page and a repeat visit carries all 71 KB again.
+> Everything that is not HTML gets both and answers 304 — including the
+> Markdown twin, through the same code. It is the store, not this repo: a path
+> that never reaches the Worker behaves the same, buffering the body instead of
+> streaming it changes nothing, a 12 KB PNG has both, `wrangler dev` sends the
+> `ETag` for the same page, and Pages serves the identical bytes with both.
 
 **GitHub Pages.** `.github/workflows/pages.yml` builds on every push to `main`
 and hands the artefact to `actions/deploy-pages`. Set the Pages source to
