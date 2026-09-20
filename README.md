@@ -16,10 +16,15 @@ Shipped to the browser: **2.2 KB of JavaScript** and **2.0 KB of CSS**, gzipped.
 `devicon` and `simple-icons` are read only by the generator; their paths are
 inlined at build time, so neither library reaches the browser.
 
-Everything is in `dependencies` and there are no `devDependencies`. Nothing
-here is published to a registry, so npm's runtime/development split has no
-consumer to serve; what matters is that a host doing a production-only
-install can still produce `dist/`. Astro's own templates do the same.
+The split is by what reaches `dist/`, not by npm's published-package sense of
+runtime: `astro`, its integrations and the two icon libraries all put bytes in
+the output, so they are `dependencies`. `typescript`, `@types/node` and
+`@astrojs/check` only ever check — Astro strips types with esbuild, never tsc
+— so they are `devDependencies`, where the Astro docs site and the Next.js
+TypeScript example keep them too.
+
+One consequence: `pnpm build` runs `astro check` first, so it needs a full
+install. Neither host does a production-only one.
 
 ## Commands
 

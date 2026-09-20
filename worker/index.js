@@ -1,5 +1,5 @@
 /**
- * The two routes static hosting gets wrong, and nothing else.
+ * The routes static hosting gets wrong, and nothing else.
  *
  * `/` has two representations and the choice is in a request header, which a
  * static host never reads. `/404` and `/404.html` answer 200 from one, which
@@ -12,17 +12,26 @@
 /** `text/markdown` as a whole media type, not a substring of another one. */
 const WANTS_MARKDOWN = /(?:^|,)\s*text\/markdown\s*(?:;|,|$)/i;
 
+/** The asset store labels HTML `text/html` with no encoding. Browsers fall
+ *  back to the `<meta charset>`, but the header should not need rescuing. */
+function labelEncoding(response) {
+  const type = response.headers.get('Content-Type') ?? '';
+  if (type.startsWith('text/html') && !type.includes('charset')) {
+    response.headers.set('Content-Type', 'text/html; charset=utf-8');
+  }
+  return response;
+}
+
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     const get = (path) => env.ASSETS.fetch(new Request(new URL(path, request.url), request));
 
     if (pathname === '/404' || pathname === '/404.html') {
-      // `/404.html` is asked for as `/404`: html_handling drops the extension,
-      // so the asset store answers the spelled-out path with a redirect and no
-      // body at all.
+      // Asked for as `/404`: html_handling drops the extension, so the asset
+      // store answers the spelled-out path with a redirect and no body at all.
       const asset = await get('/404');
-      return new Response(asset.body, { status: 404, headers: asset.headers });
+      return labelEncoding(new Response(asset.body, { status: 404, headers: asset.headers }));
     }
 
     const markdown = WANTS_MARKDOWN.test(request.headers.get('accept') ?? '');
@@ -35,6 +44,6 @@ export default {
     if (markdown) {
       response.headers.set('Content-Type', 'text/markdown; charset=utf-8');
     }
-    return response;
+    return labelEncoding(response);
   },
 };
