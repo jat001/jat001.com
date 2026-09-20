@@ -26,10 +26,15 @@ import Base from '../layouts/Base.astro';
     display: grid;
     /* An explicit track for the sphere. `auto` collapses it to zero: the
        stage sizes itself as a percentage of the track, and the track sizes
-       itself from the stage. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, clamp(17rem, 40vw, 35rem));
+       itself from the stage.
+
+       The ramp reaches 35rem exactly where the shell stops at 75rem. Sized in
+       plain vw it kept widening after the shell had capped, and the text
+       column, being the 1fr, paid for every pixel of it. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, clamp(17rem, calc(60vw - 160px), 35rem));
     align-items: center;
-    gap: clamp(20px, 4vw, 64px);
+    /* ceiling set where 4vw lands at a 75rem shell, for the same reason */
+    gap: clamp(20px, 4vw, 48px);
   }
 
   @media (max-width: 900px) {

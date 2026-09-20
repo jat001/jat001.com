@@ -151,8 +151,14 @@ into, so the rule is scoped to both.
 
 It is governed by a **container query**, not a media query: it is squeezed by
 the sphere taking the other track, so it has to react to its own column.
-Below 420px of column it stacks into label-against-value rows, which
+Below 400px of column it stacks into label-against-value rows, which
 also covers phones, where that column is the whole page.
+
+The sphere's track reaches its `35rem` ceiling exactly where the shell caps
+at `75rem`. Sized in plain `vw` it kept widening after the shell had stopped,
+and the text column, being the `1fr`, paid for it: 552px of it at a 1200px
+viewport against 448px at 1920px, so the contact cells came out *wider* on
+the smaller screen.
 
 ## Deploying
 

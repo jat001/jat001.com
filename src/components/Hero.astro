@@ -107,8 +107,9 @@ import { profile } from '../data/profile';
 
   /* Two up holds down to 272px — "chat@jat.email" measures 103.6px, so a cell
      needs 136px — but by then the column is a phone, where four half-width
-     cells read worse than four rows. */
-  @container (max-width: 420px) {
+     cells read worse than four rows. 400px keeps 2x2 on the same viewports it
+     held before the sphere's track grew. */
+  @container (max-width: 400px) {
     .links {
       grid-template-columns: minmax(0, 1fr);
     }
