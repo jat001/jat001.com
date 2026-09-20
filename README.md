@@ -70,6 +70,7 @@ src/
   components/   Hero (left), Sphere (right), ThemeToggle, Footer
   data/         profile.ts — all the copy; languages.ts — GENERATED
   layouts/      Base.astro — head, meta, fonts, no-flash theme script
+  lib/          markdown.ts — where a page's Markdown twin lives
   pages/        index.astro — the page itself; 404.astro; index.md.ts
   scripts/      sphere.ts — the 3D, dynamically imported
   styles/       global.css — tokens for both themes

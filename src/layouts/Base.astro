@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Font } from 'astro:assets';
 import { profile, title } from '../data/profile';
+import { markdownTwin } from '../lib/markdown';
 import { languages } from '../data/languages';
 import '../styles/global.css';
 
@@ -61,7 +62,12 @@ const personSchema = {
     {!noindex && <link rel="canonical" href={canonical.href} />}
     {
       !noindex && (
-        <link rel="alternate" type="text/markdown" href="/index.md" title={profile.name} />
+        <link
+          rel="alternate"
+          type="text/markdown"
+          href={markdownTwin(Astro.url.pathname)}
+          title={profile.name}
+        />
       )
     }
 

@@ -10,22 +10,13 @@
  * absent from that list is served off the edge without waking this up.
  */
 
+import { markdownTwin } from '../src/lib/markdown';
+
 /** `text/markdown` as a whole media type, not a substring of another one. */
 const WANTS_MARKDOWN = /(?:^|,)\s*text\/markdown\s*(?:;|,|$)/i;
 
 /** The error document, whose path this platform fixes at `/404.html`. */
 const ERROR_PAGE = '/404';
-
-/**
- * Where a page's Markdown twin lives, by the rule the `.md.ts` endpoints
- * already follow: `/` is `/index.md`, `/about` is `/about.md`. Nothing is
- * listed, so a new page needs no edit here — only its own endpoint and a line
- * in `run_worker_first`.
- */
-function markdownTwin(pathname: string): string {
-  if (pathname.endsWith('/')) return `${pathname}index.md`;
-  return `${pathname.replace(/\.html$/, '')}.md`;
-}
 
 /**
  * Every response from here is one of two types, so both are stated rather than
@@ -66,8 +57,8 @@ export default {
       return labelEncoding(new Response(asset.body, { status: 404, headers }), 'text/html');
     }
 
-    // A page without a twin falls back to itself, so the list of which pages
-    // have Markdown lives in the pages directory rather than in here.
+    // A page without a twin falls back to itself, so which pages have Markdown
+    // is decided by what the pages directory emits, not by a list in here.
     const twin = WANTS_MARKDOWN.test(request.headers.get('accept') ?? '')
       ? await get(markdownTwin(pathname), false)
       : null;
