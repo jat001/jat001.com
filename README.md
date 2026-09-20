@@ -263,15 +263,16 @@ regardless.
 real 404; Pages serves that file with a 404 of its own, so neither needs a
 redirect. `wrangler deploy` from a checkout works too, for a manual push.
 
-> Pages carry no `ETag` to the client on Workers, so nothing can revalidate
-> one and a repeat visit spends all 71 KB again. Logging inside the Worker
-> under `wrangler dev --remote` shows where it goes: the asset store does hand
-> one over, and the Worker's own response still carries it, so it is stripped
-> somewhere after that. Only HTML loses it — a PNG, Markdown and plain text
-> routed through the same code all keep theirs, as does a path that never
-> reaches the Worker, and neither buffering the body nor refusing compression
-> changes anything. `wrangler dev` locally, and Pages, both send it for the
-> identical bytes. Nothing here can put it back.
+> Cloudflare strips `ETag` from every HTML response its asset service sends,
+> so nothing can revalidate a page and a repeat visit spends all 71 KB again.
+> A 42-byte `.html` file uploaded beside the site, on no Worker route at all,
+> comes back chunked with no `ETag` and no `Content-Length`, while Markdown,
+> plain text and a PNG all keep theirs — it is not this repo, not the Worker,
+> not the body size, not compression. Logging inside the Worker under
+> `wrangler dev --remote` shows the store handing the validator over and the
+> Worker passing it on, so the loss is downstream of both. It is the header
+> name that goes: the same value under `X-Probe-Etag` survives, and so does
+> `Last-Modified`, which leaves a way back if it is ever worth taking.
 
 **GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
 hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
