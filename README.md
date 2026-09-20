@@ -233,10 +233,22 @@ Builds. That runs over Cloudflare's GitHub App, so nothing is stored in the
 repo and no API token is involved. Build settings live in the dashboard, not
 in `wrangler.toml`, which Workers Builds ignores for that purpose:
 
-| setting        | value                 |
-| -------------- | --------------------- |
-| Build command  | `pnpm run build`      |
-| Deploy command | `pnx wrangler deploy` |
+| setting                     | value                                                                |
+| --------------------------- | -------------------------------------------------------------------- |
+| Build command               | `pnpm run build`                                                     |
+| Deploy command              | `pnx wrangler deploy`                                                |
+| Build watch paths — include | `*`                                                                  |
+| Build watch paths — exclude | `.github/*, .vscode/*, .gitignore, README.md, AGENTS.md, CLAUDE.md`  |
+
+The watch paths are the mirror of `paths-ignore` in the Pages workflow, and
+the two are **not** written the same way. Cloudflare's `*` matches the `/`
+character, so `*.md` there would take every Markdown file in the tree,
+including any under `src/`; the root docs are named one by one instead.
+Cloudflare also allows a wildcard only at the start or end of a rule.
+Excludes are applied first and whatever survives is matched against the
+includes, so `*` plus that exclude list means "build unless the push touched
+nothing else". A push of 20 commits or 3000 files skips the check and builds
+regardless.
 
 `not_found_handling` points unmatched paths at `404.html` and answers with a
 real 404; Pages serves that file with a 404 of its own, so neither needs a
