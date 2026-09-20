@@ -11,6 +11,7 @@
     "check": "pnpm run build:languages && astro check",
     "build": "pnpm run check && astro build",
     "preview": "pnpm run build && astro preview",
+    "generate-types": "wrangler types; astro sync",
     "build:languages": "node scripts/build-languages.mjs"
   },
   "dependencies": {

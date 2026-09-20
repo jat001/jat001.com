@@ -33,16 +33,29 @@ pnpm dev               # regenerate languages, then dev server
 pnpm check             # regenerate languages, then astro check
 pnpm build             # check, then astro build
 pnpm preview           # build, then serve dist/
+pnpm generate-types    # generate worker-configuration.d.ts and .astro/*.d.ts
 pnpm build:languages   # refresh src/data/languages.ts if it is over 12 h old
 ```
 
-`src/data/languages.ts` is generated and gitignored. Every entry point above
-refreshes it, but only if the copy on disk is **over 12 h old** — the age comes
-from the `Generated:` timestamp in its own header, not the file's mtime, which
-a checkout would reset. So a working tree reaches WakaTime about twice a day,
-and `--force` whenever you want it now. A fresh clone has no copy at all and
-must reach WakaTime; if it cannot, the fetch throws and the build fails rather
-than shipping a stale list.
+`generate-types` is the one script that needs `wrangler`, which is not a
+dependency of this project. It is deliberately outside the `build` chain: the
+GitHub Pages runner has no wrangler, and a build that reached for one would
+fail there. `tsconfig.json` excludes `worker/` for the same reason — `astro
+check` would otherwise want the `Env` that script writes. Run it after editing
+`wrangler.toml`, for the editor's benefit; nothing else depends on it, and
+Workers Builds compiles `worker/index.ts` on its own.
+
+> On Windows, run `pnpm config set shellEmulator true` once. These scripts
+> chain with `&&` and `;`, and `cmd.exe` reads `;` as part of an argument
+> rather than as a command separator. pnpm's own shell reads both.
+
+`src/data/languages.ts` is generated and gitignored. `dev`, `check`, `build`
+and `preview` refresh it, but only if the copy on disk is **over 12 h old** —
+the age comes from the `Generated:` timestamp in its own header, not the file's
+mtime, which a checkout would reset. So a working tree reaches WakaTime about
+twice a day, and `--force` whenever you want it now. A fresh clone has no copy
+at all and must reach WakaTime; if it cannot, the fetch throws and the build
+fails rather than shipping a stale list.
 
 `server.host` is set in the config, so both `dev` and `preview` listen on every
 interface and can be opened from a phone on the same network.
@@ -57,11 +70,13 @@ src/
   components/   Hero (left), Sphere (right), ThemeToggle, Footer
   data/         profile.ts — all the copy; languages.ts — GENERATED
   layouts/      Base.astro — head, meta, fonts, no-flash theme script
-  pages/        index.astro — the page itself; 404.astro
+  pages/        index.astro — the page itself; 404.astro; index.md.ts
   scripts/      sphere.ts — the 3D, dynamically imported
   styles/       global.css — tokens for both themes
 scripts/
   build-languages.mjs   WakaTime + icons -> src/data/languages.ts
+worker/
+  index.ts      Cloudflare only: Accept negotiation, and a 404 that says 404
 ```
 
 The only copy outside `profile.ts` is interface text: the two hard-coded
@@ -208,9 +223,11 @@ the smaller screen.
 `pnpm build` emits a static `dist/`, and two targets are wired to it. They
 build the same output, so either can serve the site alone.
 
-**Cloudflare Workers.** `wrangler.toml` declares an assets-only Worker — no
-`main`, so `dist/` is served from the edge and no Worker ever boots. Connect
-the repo in the dashboard under Workers & Pages → the Worker → Settings →
+**Cloudflare Workers.** `wrangler.toml` serves `dist/` from the edge and lists
+in `run_worker_first` the handful of paths that reach `worker/index.ts`
+instead. Everything absent from that list — the CSS, the fonts, the icons —
+never wakes it. Connect the repo in the dashboard under Workers & Pages →
+the Worker → Settings →
 Builds. That runs over Cloudflare's GitHub App, so nothing is stored in the
 repo and no API token is involved. Build settings live in the dashboard, not
 in `wrangler.toml`, which Workers Builds ignores for that purpose:
