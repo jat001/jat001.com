@@ -18,7 +18,11 @@ import { profile } from '../data/profile';
 <style>
   main {
     flex: 1;
-    width: min(100%, 75rem);
+    /* 30rem of content once the gutters are paid for. The cap is what makes
+       the cqw below mean anything: measured against the full 75rem shell the
+       mark would come out four times bigger on a desktop than on a phone. */
+    width: min(100%, calc(30rem + 2 * var(--gut)));
+    container-type: inline-size;
     margin-inline: auto;
     padding: clamp(32px, 6vh, 64px) var(--gut);
     display: grid;
@@ -28,7 +32,7 @@ import { profile } from '../data/profile';
   }
 
   .code {
-    font-size: clamp(64px, 14vw, 220px);
+    font-size: 46cqw;
     font-weight: 600;
     line-height: 0.84;
     letter-spacing: -0.05em;
@@ -44,7 +48,7 @@ import { profile } from '../data/profile';
   }
 
   .line {
-    font-size: clamp(18px, 2vw, 28px);
+    font-size: clamp(18px, 6cqw, 28px);
     font-weight: 300;
     letter-spacing: -0.015em;
     color: var(--dim);

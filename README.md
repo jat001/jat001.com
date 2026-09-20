@@ -166,6 +166,13 @@ it: on `14vw` the name filled 22% of its column at 540px and 67% at 1600px,
 where it now holds 65-67% throughout. `.intro` carries `container-type` for
 that and nothing else — no rule queries it.
 
+The 404 page is the same rule. Its `main` is capped with
+`min(100%, calc(30rem + 2 * var(--gut)))`, so the cap lands on the content
+box rather than the border box, and the mark is `46cqw`. It had the same
+split: a flat 27% of its container from 480px to 1200px, then 36% once the
+container capped at 1072px while `14vw` carried on, and 40% at the bottom
+where the `64px` floor held the type still against a shrinking container.
+
 Stacking is a **media query** at 480px, not a container query. A container
 query cannot separate the two cases that matter, because their ranges
 overlap: a phone's column is 288–432px and the column beside the sphere is
