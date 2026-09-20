@@ -3,12 +3,19 @@ name: GitHub Pages
 on:
   push:
     branches: [main]
-    # Cloudflare's half of the repo. Ignored rather than allow-listed: a new
-    # build input that nobody remembered to add would leave this site stale
-    # without saying so, where a new Cloudflare file only costs a spare run.
+    # Nothing here reaches the Astro build. Ignored rather than allow-listed:
+    # a build input nobody remembered to add would leave this site stale with
+    # nothing to show for it, where a file missing from this list costs one
+    # spare run. `*.md` is the root docs only — GitHub's `*` does not cross a
+    # `/`, so Markdown under src/ would still trigger. `.gitattributes` is
+    # absent on purpose: it decides the line endings of the checkout, and so
+    # can change the bytes that are built.
     paths-ignore:
       - worker/**
       - wrangler.toml
+      - .vscode/**
+      - .gitignore
+      - '*.md'
   workflow_dispatch:
 
 permissions:

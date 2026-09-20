@@ -252,10 +252,13 @@ redirect. `wrangler deploy` from a checkout works too, for a manual push.
 
 **GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
 hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
-Actions" in repo settings. `paths-ignore` skips the run when only `worker/` or
-`wrangler.toml` changed, since neither reaches this build — ignored rather
-than allow-listed, because a forgotten build input would leave the site stale
-without saying so, where a forgotten Cloudflare file costs one spare run.
+Actions" in repo settings. `paths-ignore` skips the run when a push touched
+only `worker/`, `wrangler.toml`, `.vscode/`, `.gitignore` or a root `*.md`,
+none of which reach this build — ignored rather than allow-listed, because a
+forgotten build input would leave the site stale without saying so, where a
+forgotten inert file costs one spare run. `.gitattributes` is left out of the
+list: it sets the line endings of the checkout, so it can change the bytes
+that get built.
 
 Both assume the site sits at the root of its domain: `astro.config.ts` sets
 `site` and deliberately no `base`. Serving from a subpath, such as the default
