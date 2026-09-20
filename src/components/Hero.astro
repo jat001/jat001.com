@@ -32,6 +32,8 @@ import { profile } from '../data/profile';
   .intro {
     width: min(100%, 30rem);
     margin-inline: auto;
+    /* the basis for the cqw type below — not a query, nothing reads it as one */
+    container-type: inline-size;
   }
 
   /* The contact panel is solid and bordered, the sphere beside it mostly air;
@@ -45,7 +47,10 @@ import { profile } from '../data/profile';
   }
 
   .name {
-    font-size: clamp(64px, 14vw, 220px);
+    /* Sized from the column, not the viewport. The column caps at 30rem, so
+       past that point vw no longer stands in for it and the name kept
+       shrinking against a column that had stopped moving. */
+    font-size: min(47cqw, 220px);
     font-weight: 600;
     line-height: 0.84;
     text-align: center;
@@ -61,7 +66,8 @@ import { profile } from '../data/profile';
   }
 
   .tagline {
-    font-size: clamp(18px, 2vw, 28px);
+    /* from the column too, so it holds its ratio to the name */
+    font-size: clamp(18px, 6cqw, 28px);
     font-weight: 300;
     line-height: 1.38;
     letter-spacing: -0.015em;

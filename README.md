@@ -160,6 +160,12 @@ nothing else claims the width, so without a ceiling the contact cells reached
 405px — nearly three times their desktop width. The two-column track tops out
 at 472px, so the cap only bites once the columns have collapsed.
 
+The name and tagline are sized in `cqw`, off the column rather than the
+viewport. Once the column caps at `30rem` the viewport stops standing in for
+it: on `14vw` the name filled 22% of its column at 540px and 67% at 1600px,
+where it now holds 65-67% throughout. `.intro` carries `container-type` for
+that and nothing else — no rule queries it.
+
 Stacking is a **media query** at 480px, not a container query. A container
 query cannot separate the two cases that matter, because their ranges
 overlap: a phone's column is 288–432px and the column beside the sphere is
