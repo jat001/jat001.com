@@ -250,9 +250,12 @@ redirect. `wrangler deploy` from a checkout works too, for a manual push.
 > streaming it changes nothing, a 12 KB PNG has both, `wrangler dev` sends the
 > `ETag` for the same page, and Pages serves the identical bytes with both.
 
-**GitHub Pages.** `.github/workflows/pages.yml` builds on every push to `main`
-and hands the artefact to `actions/deploy-pages`. Set the Pages source to
-"GitHub Actions" in repo settings.
+**GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
+hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
+Actions" in repo settings. `paths-ignore` skips the run when only `worker/` or
+`wrangler.toml` changed, since neither reaches this build — ignored rather
+than allow-listed, because a forgotten build input would leave the site stale
+without saying so, where a forgotten Cloudflare file costs one spare run.
 
 Both assume the site sits at the root of its domain: `astro.config.ts` sets
 `site` and deliberately no `base`. Serving from a subpath, such as the default

@@ -3,6 +3,12 @@ name: GitHub Pages
 on:
   push:
     branches: [main]
+    # Cloudflare's half of the repo. Ignored rather than allow-listed: a new
+    # build input that nobody remembered to add would leave this site stale
+    # without saying so, where a new Cloudflare file only costs a spare run.
+    paths-ignore:
+      - worker/**
+      - wrangler.toml
   workflow_dispatch:
 
 permissions:
