@@ -242,9 +242,18 @@ in `wrangler.toml`, which Workers Builds ignores for that purpose:
 
 The watch paths are the mirror of `paths-ignore` in the Pages workflow, and
 the two are **not** written the same way. Cloudflare's `*` matches the `/`
-character, so `*.md` there would take every Markdown file in the tree,
-including any under `src/`; the root docs are named one by one instead.
-Cloudflare also allows a wildcard only at the start or end of a rule.
+character, where GitHub's does not, so `*.md` here would take every Markdown
+file in the tree rather than the three at the root — including, one day,
+content under `src/`, which would then stop triggering a deploy.
+
+Narrowing it to the root is not expressible. `/*.md` fails twice over: the
+wildcard may only sit at the start or end of a rule, not between `/` and
+`.md`, and the paths being matched are repo-relative with no leading slash,
+as the docs' own `docs/README.md` example shows. The rules came from branch
+filtering — `fix/*` matching `fix/bugs` — and have no notion of a path
+boundary. So the root docs are named one by one, and a new one has to be
+added by hand. That direction only ever costs a spare build.
+
 Excludes are applied first and whatever survives is matched against the
 includes, so `*` plus that exclude list means "build unless the push touched
 nothing else". A push of 20 commits or 3000 files skips the check and builds
