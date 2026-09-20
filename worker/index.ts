@@ -33,34 +33,28 @@ export default {
     const { pathname } = new URL(request.url);
 
     /**
-     * The only way in to the asset store.
+     * The only way in to the asset store, and deliberately by URL alone.
      *
-     * `validators` forwards the caller's `If-None-Match`, which is what lets a
-     * pass-through answer 304. Any branch that rewrites the status or picks a
-     * different file has to drop them: the store would answer 304 with no
-     * body, and a 304 reused as something else renders nothing.
+     * Handing it the caller's request instead costs the ETag: the store omits
+     * one, so nothing downstream can answer 304 and every repeat visit carries
+     * the whole page. By URL it returns the validator, and the edge answers
+     * 304 from it.
      */
-    const get = (path: string, validators = true): Promise<Response> => {
-      const url = new URL(path, request.url);
-      return env.ASSETS.fetch(validators ? new Request(url, request) : url);
-    };
+    const get = (path: string): Promise<Response> =>
+      env.ASSETS.fetch(new URL(path, request.url));
 
     if (pathname === ERROR_PAGE || pathname === `${ERROR_PAGE}.html`) {
       // Asked for without the extension, because html_handling drops it and
       // the store answers the spelled-out path with a bodyless redirect.
-      const asset = await get(ERROR_PAGE, false);
-      const headers = new Headers(asset.headers);
-      // These describe the 200 the store just served. Left on a 404 they only
-      // invite the revalidation this branch has no way to answer.
-      headers.delete('ETag');
-      headers.delete('Last-Modified');
-      return labelEncoding(new Response(asset.body, { status: 404, headers }), 'text/html');
+      const asset = await get(ERROR_PAGE);
+      const response = new Response(asset.body, { status: 404, headers: asset.headers });
+      return labelEncoding(response, 'text/html');
     }
 
     // A page without a twin falls back to itself, so which pages have Markdown
     // is decided by what the pages directory emits, not by a list in here.
     const twin = WANTS_MARKDOWN.test(request.headers.get('accept') ?? '')
-      ? await get(markdownTwin(pathname), false)
+      ? await get(markdownTwin(pathname))
       : null;
     const markdown = twin?.status === 200;
     const asset = markdown ? (twin as Response) : await get(pathname);
