@@ -18,49 +18,32 @@ const WANTS_MARKDOWN = /(?:^|,)\s*text\/markdown\s*(?:;|,|$)/i;
 /** The error document, whose path this platform fixes at `/404.html`. */
 const ERROR_PAGE = '/404';
 
-/**
- * Every response from here is one of two types, so both are stated rather than
- * patched: the asset store answers HTML with no encoding at all, and it has no
- * way to know that a `.md` file is standing in for a page.
- */
-function labelEncoding(response: Response, type: string): Response {
-  response.headers.set('Content-Type', `${type}; charset=utf-8`);
-  return response;
-}
-
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const { pathname } = new URL(request.url);
 
     /**
-     * The only way in to the asset store.
+     * The only way in to the asset store. Handing over the caller's request
+     * carries its `If-None-Match` with it, so a match comes back 304.
      *
-     * `validators` hands over the caller's request, so its `If-None-Match`
-     * reaches the store and a match comes back 304. The error branch cannot
-     * take that answer — a 304 carries no body, and rewritten to 404 it
-     * renders nothing — so it asks by URL and always gets the page.
+     * `conditional: false` asks by URL alone, and the error branch has to:
+     * it rewrites the status, and a 304 rewritten to 404 has no body left to
+     * render. A plain URL also follows the store's own redirects, where a
+     * forwarded request inherits `redirect: "manual"` and would not.
      */
-    const get = (path: string, validators = true): Promise<Response> => {
+    const get = (path: string, conditional = true): Promise<Response> => {
       const url = new URL(path, request.url);
-      return env.ASSETS.fetch(validators ? new Request(url, request) : url);
-    };
-
-    const answer = (asset: Response, type: string, status?: number) => {
-      const response = new Response(asset.body, {
-        status: status ?? asset.status,
-        headers: asset.headers,
-      });
-      // Two representations answer to one URL, and this has to be said even
-      // when only one exists: a cache that stored the page unkeyed would go on
-      // to hand it to an agent that asked for Markdown.
-      response.headers.set('Vary', 'Accept');
-      return labelEncoding(response, type);
+      return env.ASSETS.fetch(conditional ? new Request(url, request) : url);
     };
 
     if (pathname === ERROR_PAGE || pathname === `${ERROR_PAGE}.html`) {
-      // Asked for without the extension, because html_handling drops it and
-      // the store answers the spelled-out path with a bodyless redirect.
-      return answer(await get(ERROR_PAGE, false), 'text/html', 404);
+      // Asked for by the tidy path, since html_handling redirects the
+      // spelled-out one and this skips the hop. No `Vary` on the way out: the
+      // error document has no second representation to be confused with.
+      const asset = await get(ERROR_PAGE, false);
+      const response = new Response(asset.body, { status: 404, headers: asset.headers });
+      response.headers.set('Content-Type', 'text/html; charset=utf-8');
+      return response;
     }
 
     // A page without a twin falls back to itself, so which pages have Markdown
@@ -71,14 +54,25 @@ export default {
     const markdown = twin !== null && (twin.status === 200 || twin.status === 304);
     const asset = markdown ? (twin as Response) : await get(pathname);
 
-    // Already the right answer, and with no body there is nothing to buffer,
-    // relabel, or send chunked.
+    // Nothing to relabel on a bodyless answer, but it still has to say what it
+    // varies on, or a cache will hand it back for the other representation.
     if (asset.status === 304) {
       const notModified = new Response(null, { status: 304, headers: asset.headers });
       notModified.headers.set('Vary', 'Accept');
       return notModified;
     }
 
-    return answer(asset, markdown ? 'text/markdown' : 'text/html');
+    const response = new Response(asset.body, asset);
+    // Said even where only one representation exists today: a cache that
+    // stored the page unkeyed would go on to serve it to an agent that asked
+    // for Markdown.
+    response.headers.set('Vary', 'Accept');
+    // Stated rather than inherited: the store labels HTML with no encoding,
+    // and has no way to know a `.md` file is standing in for a page.
+    response.headers.set(
+      'Content-Type',
+      markdown ? 'text/markdown; charset=utf-8' : 'text/html; charset=utf-8'
+    );
+    return response;
   },
 };
