@@ -17,12 +17,12 @@ import Base from '../layouts/Base.astro';
 
 <style>
   main {
-    min-height: 100svh;
+    flex: 1;
     /* Deliberately narrow: the two columns should read as one composition
        rather than drifting to opposite edges of a wide screen. */
     width: min(100%, 75rem);
     margin-inline: auto;
-    padding: clamp(32px, 6vh, 64px) var(--gut) clamp(76px, 12vh, 104px);
+    padding: clamp(32px, 6vh, 64px) var(--gut);
     display: grid;
     /* An explicit track for the sphere. `auto` collapses it to zero: the
        stage sizes itself as a percentage of the track, and the track sizes

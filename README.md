@@ -140,6 +140,12 @@ until that key is cleared.
 One grid, two tracks, collapsing to one below 900px — where the sphere is
 dropped rather than shrunk, so the page still fits a single screen.
 
+`body` is a flex column of `100svh`, `main` takes the slack and the footer
+follows it in normal flow. On anything tall enough that puts the footer on
+the bottom edge of the screen with nothing to scroll; on a landscape phone,
+where the content needs about 500px against 390px of height, the page scrolls
+and the footer is at the end of it rather than floating over the content.
+
 The contact row is two fixed columns, not `auto-fit`: four contacts in a
 column this wide fit three across, leaving the fourth alone in its own row.
 
