@@ -263,16 +263,20 @@ regardless.
 real 404; Pages serves that file with a 404 of its own, so neither needs a
 redirect. `wrangler deploy` from a checkout works too, for a manual push.
 
-> Cloudflare strips `ETag` from every HTML response its asset service sends,
-> so nothing can revalidate a page and a repeat visit spends all 71 KB again.
-> A 42-byte `.html` file uploaded beside the site, on no Worker route at all,
-> comes back chunked with no `ETag` and no `Content-Length`, while Markdown,
-> plain text and a PNG all keep theirs — it is not this repo, not the Worker,
-> not the body size, not compression. Logging inside the Worker under
-> `wrangler dev --remote` shows the store handing the validator over and the
-> Worker passing it on, so the loss is downstream of both. It is the header
-> name that goes: the same value under `X-Probe-Etag` survives, and so does
-> `Last-Modified`, which leaves a way back if it is ever worth taking.
+> **Pages need a cache rule to be cacheable.** Enable **Respect Strong ETags**
+> in a cache rule whose condition covers the hostname you serve. Without it
+> Cloudflare rewrites HTML at the edge — 583 bytes of WebMCP and JavaScript
+> Detections, here — and a rewritten body has no length to declare, so the
+> response goes out `chunked` with no `Content-Length` and no `ETag`. Nothing
+> can then revalidate a page, and every visit spends the full 71 KB.
+>
+> With the rule on, `/` comes back as 71,312 bytes, the build output exactly,
+> and `If-None-Match` answers `304` in 0 bytes. Markdown, images and plain
+> text were never affected, since none of them are rewritten — which is what
+> made this look for a long time like something about HTML that could not be
+> helped. Scope it to the hostname and not to a path: a rule covering only
+> one file fixes only that file. Cache rules are zone-scoped, so the
+> `*.workers.dev` hostname cannot have one.
 
 **GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
 hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
