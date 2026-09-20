@@ -242,6 +242,13 @@ in `wrangler.toml`, which Workers Builds ignores for that purpose:
 real 404; Pages serves that file with a 404 of its own, so neither needs a
 redirect. `wrangler deploy` from a checkout works too, for a manual push.
 
+> Cloudflare's asset service sends no `ETag` and no `Content-Length` for HTML
+> — it streams it chunked — so the pages cannot be revalidated there and a
+> repeat visit carries all 71 KB again. Everything that is not HTML gets both
+> and answers 304. It is the platform, not this repo: a path that never
+> touches the Worker behaves the same, a 12 KB PNG does not, `wrangler dev`
+> does not, and Pages serves the identical HTML with both headers.
+
 **GitHub Pages.** `.github/workflows/pages.yml` builds on every push to `main`
 and hands the artefact to `actions/deploy-pages`. Set the Pages source to
 "GitHub Actions" in repo settings.

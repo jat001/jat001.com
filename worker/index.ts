@@ -33,12 +33,10 @@ export default {
     const { pathname } = new URL(request.url);
 
     /**
-     * The only way in to the asset store, and deliberately by URL alone.
-     *
-     * Handing it the caller's request instead costs the ETag: the store omits
-     * one, so nothing downstream can answer 304 and every repeat visit carries
-     * the whole page. By URL it returns the validator, and the edge answers
-     * 304 from it.
+     * The only way in to the asset store, by URL rather than by handing over
+     * the caller's request. Nothing here reads the caller's validators, and
+     * nothing needs to: where the store sends an ETag, the edge answers 304
+     * from it on its own.
      */
     const get = (path: string): Promise<Response> =>
       env.ASSETS.fetch(new URL(path, request.url));
