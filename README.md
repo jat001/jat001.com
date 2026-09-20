@@ -263,13 +263,15 @@ regardless.
 real 404; Pages serves that file with a 404 of its own, so neither needs a
 redirect. `wrangler deploy` from a checkout works too, for a manual push.
 
-> Live, the asset store hands back no `ETag` and no `Content-Length` for HTML,
-> so nothing can revalidate a page and a repeat visit carries all 71 KB again.
-> Everything that is not HTML gets both and answers 304 — including the
-> Markdown twin, through the same code. It is the store, not this repo: a path
-> that never reaches the Worker behaves the same, buffering the body instead of
-> streaming it changes nothing, a 12 KB PNG has both, `wrangler dev` sends the
-> `ETag` for the same page, and Pages serves the identical bytes with both.
+> Pages carry no `ETag` to the client on Workers, so nothing can revalidate
+> one and a repeat visit spends all 71 KB again. Logging inside the Worker
+> under `wrangler dev --remote` shows where it goes: the asset store does hand
+> one over, and the Worker's own response still carries it, so it is stripped
+> somewhere after that. Only HTML loses it — a PNG, Markdown and plain text
+> routed through the same code all keep theirs, as does a path that never
+> reaches the Worker, and neither buffering the body nor refusing compression
+> changes anything. `wrangler dev` locally, and Pages, both send it for the
+> identical bytes. Nothing here can put it back.
 
 **GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
 hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
