@@ -149,10 +149,19 @@ air reads as the heavier side on a shared midline. Narrower than that there
 is no sphere to balance against, and under 700px of height no slack to lift
 into, so the rule is scoped to both.
 
-It is governed by a **container query**, not a media query: it is squeezed by
-the sphere taking the other track, so it has to react to its own column.
-Below 400px of column it stacks into label-against-value rows, which
-also covers phones, where that column is the whole page.
+The left column is capped at `30rem`. Below 900px the sphere is gone and
+nothing else claims the width, so without a ceiling the contact cells reached
+405px — nearly three times their desktop width. The two-column track tops out
+at 472px, so the cap only bites once the columns have collapsed.
+
+Stacking is a **media query** at 480px, not a container query. A container
+query cannot separate the two cases that matter, because their ranges
+overlap: a phone's column is 288–432px and the column beside the sphere is
+394–472px. A 400px threshold therefore stacked the row between 901px and
+923px of viewport — two up on either side of that band, one up inside it. The
+squeeze the container query was written for no longer exists either: it was
+calibrated when three cells needed 407px, and two need 272px against a
+394px floor.
 
 The sphere's track reaches its `35rem` ceiling exactly where the shell caps
 at `75rem`. Sized in plain `vw` it kept widening after the shell had stopped,

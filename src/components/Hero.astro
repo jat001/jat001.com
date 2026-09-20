@@ -25,10 +25,13 @@ import { profile } from '../data/profile';
 </div>
 
 <style>
-  /* Queried below, so the contact row reacts to its own column rather than to
-     the viewport — the squeeze comes from the sphere taking the other track. */
+  /* Below 900px the sphere is gone and nothing else claims the width, so
+     without a ceiling the contact cells reach 405px — nearly three times what
+     they are on a desktop. The two-column track tops out at 472px, so this
+     only ever bites once the columns have collapsed. */
   .intro {
-    container-type: inline-size;
+    width: min(100%, 30rem);
+    margin-inline: auto;
   }
 
   /* The contact panel is solid and bordered, the sphere beside it mostly air;
@@ -105,11 +108,12 @@ import { profile } from '../data/profile';
     overflow-wrap: anywhere;
   }
 
-  /* Two up holds down to 272px — "chat@jat.email" measures 103.6px, so a cell
-     needs 136px — but by then the column is a phone, where four half-width
-     cells read worse than four rows. 400px keeps 2x2 on the same viewports it
-     held before the sphere's track grew. */
-  @container (max-width: 400px) {
+  /* A phone, not a squeeze: two up needs 272px — "chat@jat.email" measures
+     103.6px, so a cell needs 136px — and the narrowest this column ever gets
+     beside the sphere is 394px. Querying the column instead of the viewport
+     cannot separate the two, because a phone's column (288-432px) and the
+     column beside the sphere (394-472px) overlap. */
+  @media (max-width: 480px) {
     .links {
       grid-template-columns: minmax(0, 1fr);
     }
