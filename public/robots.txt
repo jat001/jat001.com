@@ -18,9 +18,15 @@
 #   augmented generation, grounding, or other real-time taking of content
 #   for generative AI search answers).
 # ai-train: training or fine-tuning AI models.
+#
+# `use` is Cloudflare's optional extension to the above, not part of the
+# policy quoted here. It says what may be kept and reused afterwards, and
+# takes one of three values: immediate (interact, but store and reuse
+# nothing), reference (index, excerpt, and link back), or full (summarize
+# and reproduce).
 
 User-Agent: *
-Content-Signal: ai-train=yes, search=yes, ai-input=yes
+Content-Signal: ai-train=yes, search=yes, ai-input=yes, use=full
 Allow: /
 
 Sitemap: https://jat001.com/sitemap-index.xml
