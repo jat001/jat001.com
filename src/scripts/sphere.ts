@@ -87,16 +87,6 @@ export function initSphere(stage: HTMLElement): () => void {
     }
   }
 
-  /* ── drag ──
-     Each logo is a link, so a drag must not end up navigating. We track how
-     far the pointer travelled and swallow the click that follows a real drag.
-     Deliberately no setPointerCapture: capturing retargets the click to the
-     stage, and then tapping a logo would never reach its <a>. */
-  const DRAG_SLOP = 4; // px of travel before it counts as a drag, not a tap
-  let downX = 0;
-  let downY = 0;
-  let dragged = false;
-
   const clampTilt = (v: number) => Math.max(-1.1, Math.min(1.1, v));
   const clampThrow = (v: number) => Math.max(-MAX_THROW, Math.min(MAX_THROW, v));
 
@@ -106,9 +96,6 @@ export function initSphere(stage: HTMLElement): () => void {
     const dy = e.clientY - lastY;
     lastX = e.clientX;
     lastY = e.clientY;
-    if (!dragged && Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_SLOP) {
-      dragged = true;
-    }
 
     // Rotate here rather than in the loop. pointermove can fire faster than
     // rAF — 120Hz pointers against 60Hz frames are ordinary — and integrating
@@ -135,28 +122,15 @@ export function initSphere(stage: HTMLElement): () => void {
   const onDown = (e: PointerEvent) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     dragging = true;
-    dragged = false;
-    downX = lastX = e.clientX;
-    downY = lastY = e.clientY;
+    lastX = e.clientX;
+    lastY = e.clientY;
     // listen on window so the drag survives leaving the stage
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
   };
 
-  // capture phase, so it runs before the link's default action
-  const onClick = (e: MouseEvent) => {
-    if (!dragged) return;
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  // anchors are natively draggable; that would start a link drag mid-spin
-  const onDragStart = (e: Event) => e.preventDefault();
-
   stage.addEventListener('pointerdown', onDown);
-  stage.addEventListener('click', onClick, true);
-  stage.addEventListener('dragstart', onDragStart);
 
   // ResizeObserver rather than window.resize: the stage can change size
   // without the window doing so — webfonts landing, page zoom, a container
@@ -224,7 +198,5 @@ export function initSphere(stage: HTMLElement): () => void {
     window.removeEventListener('pointerup', onUp);
     window.removeEventListener('pointercancel', onUp);
     stage.removeEventListener('pointerdown', onDown);
-    stage.removeEventListener('click', onClick, true);
-    stage.removeEventListener('dragstart', onDragStart);
   };
 }

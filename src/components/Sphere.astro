@@ -1,5 +1,4 @@
 ---
-import { profile } from '../data/profile';
 import { languages } from '../data/languages';
 ---
 
@@ -8,20 +7,12 @@ import { languages } from '../data/languages';
     {
       languages.map((language) => (
         <li data-language>
-          <a
-            href={profile.wakatime.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            draggable="false"
-            aria-label={`${language.label} — ${profile.wakatime.label}`}
-          >
-            <svg viewBox={language.viewBox} aria-hidden="true">
-              {language.paths.map((d) => (
-                <path d={d} fill="currentColor" />
-              ))}
-            </svg>
-            <span>{language.label}</span>
-          </a>
+          <svg viewBox={language.viewBox} aria-hidden="true">
+            {language.paths.map((d) => (
+              <path d={d} fill="currentColor" />
+            ))}
+          </svg>
+          <span>{language.label}</span>
         </li>
       ))
     }
@@ -115,6 +106,16 @@ import { languages } from '../data/languages';
      never blank and never depend on JS to be readable. */
   li {
     margin: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    color: var(--dim);
+    transition: color 0.25s var(--ease);
+  }
+  li:hover,
+  li:hover span {
+    color: var(--cy);
   }
 
   .stage[data-ready='true'] ul {
@@ -126,24 +127,6 @@ import { languages } from '../data/languages';
     top: 50%;
     margin: 0;
     will-change: transform, opacity;
-  }
-
-  a {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 7px;
-    color: var(--dim);
-    -webkit-tap-highlight-color: transparent;
-    transition: color 0.25s var(--ease);
-  }
-  a:hover,
-  a:focus-visible {
-    color: var(--cy);
-  }
-  a:hover span,
-  a:focus-visible span {
-    color: var(--cy);
   }
 
   li svg {

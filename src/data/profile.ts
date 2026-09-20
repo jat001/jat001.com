@@ -21,14 +21,8 @@ export const profile = {
     { label: 'GitHub', href: 'https://github.com/jat001', display: '@jat001' },
     { label: 'Blog', href: 'https://www.sinosky.org', display: 'sinosky.org' },
     { label: 'Email', href: 'mailto:chat@jat.email', display: 'chat@jat.email' },
+    { label: 'WakaTime', href: 'https://wakatime.com/@Jat', display: '@Jat' },
   ],
-
-  /** Where the language logos point, and what their labels name. Not called
-   *  `languages`: that is the generated list, and one meaning per name. */
-  wakatime: {
-    label: 'WakaTime',
-    href: 'https://wakatime.com/@Jat',
-  },
 } as const;
 
 export const title = `${profile.name} — ${profile.tagline}`;

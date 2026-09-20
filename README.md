@@ -12,7 +12,7 @@ of language logos on the right. Light and dark.
 | Styles | Astro scoped CSS + custom-property tokens (`src/styles/global.css`) |
 | Fonts  | Astro `fonts` API via Fontsource, self-hosted and subset            |
 
-Shipped to the browser: **2.3 KB of JavaScript** and **2.0 KB of CSS**, gzipped.
+Shipped to the browser: **2.2 KB of JavaScript** and **2.0 KB of CSS**, gzipped.
 `devicon` and `simple-icons` are dev dependencies: their paths are inlined at
 build time, so neither library reaches the browser.
 
@@ -68,10 +68,14 @@ Idle it turns slowly; drag to spin it. The loop runs **only** while the sphere
 is on screen and the tab is visible, and the element watches its own box, so
 below 900px — where CSS hides it — the chunk is never even fetched.
 
-Every logo links to `wakatime.com/@Jat`, and a drag does not navigate.
+The logos are not links. All 34 would have pointed at the same URL, which
+cost 34 tab stops and 34 identical entries in a screen reader's link list to
+reach one destination; WakaTime sits in the contact row instead. Hover is a
+per-element state, so each logo still lights on its own — that never depended
+on the anchor.
 
 > An earlier version used Three.js sprites. It cost **143.9 KB gzipped** to draw
-> the logos on a ball, versus 1.2 KB this way.
+> the logos on a ball, versus 1.1 KB this way.
 
 ## The languages
 
@@ -136,9 +140,12 @@ until that key is cleared.
 One grid, two tracks, collapsing to one below 900px — where the sphere is
 dropped rather than shrunk, so the page still fits a single screen.
 
-The contact row is governed by a **container query**, not a media query: it is
-squeezed by the sphere taking the other track, so it has to react to its own
-column. Below 420px of column it stacks into label-against-value rows, which
+The contact row is two fixed columns, not `auto-fit`: four contacts in a
+column this wide fit three across, leaving the fourth alone in its own row.
+
+It is governed by a **container query**, not a media query: it is squeezed by
+the sphere taking the other track, so it has to react to its own column.
+Below 420px of column it stacks into label-against-value rows, which
 also covers phones, where that column is the whole page.
 
 ## Deploying
