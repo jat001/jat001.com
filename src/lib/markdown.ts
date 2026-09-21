@@ -6,7 +6,7 @@
  * advertises the twin in `<link rel="alternate">`, and the Worker, which hands
  * it back when a request asks for `text/markdown`.
  */
-export function markdownTwin(pathname: string): string {
+export function markdownPathname(pathname: string): string {
   if (pathname.endsWith('/')) return `${pathname}index.md`;
   return `${pathname.replace(/\.html$/, '')}.md`;
 }
