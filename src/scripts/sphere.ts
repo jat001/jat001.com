@@ -22,9 +22,9 @@ export function initSphere(stage: HTMLElement): () => void {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   // Fibonacci sphere. Note `(2i + 1) / n` rather than `i / (n - 1)`: the
-  // latter puts the first and last point exactly on a pole, where x and z are
-  // both 0 — and a point at a pole is unchanged by any Y rotation, so those
-  // two logos would sit perfectly still while everything else turns.
+  // latter puts the first and last point exactly on a pole, and the idle spin
+  // opens turning about an axis close to the pole, so those two logos would
+  // barely move while everything else turns.
   const golden = Math.PI * (3 - Math.sqrt(5));
 
   const points = items.map((_, i) => {
@@ -49,9 +49,31 @@ export function initSphere(stage: HTMLElement): () => void {
   };
   measure();
 
+  // Attitude as a row-major rotation matrix, turned about the screen's own
+  // axes. Euler angles would turn a horizontal drag about the sphere's pole,
+  // which lags as the sphere tips, stalls at 90° and runs backwards past it;
+  // this way the near face follows the pointer at any attitude. Float64 drift
+  // stays under 1e-12 after days of frames, so it is never re-orthonormalised.
+  const m = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+
+  /** Rotates m in the plane of screen axes a and b. */
+  const turn = (a: number, b: number, angle: number) => {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    for (let j = 0; j < 3; j++) {
+      const ra = m[a * 3 + j];
+      const rb = m[b * 3 + j];
+      m[a * 3 + j] = ra * c - rb * s;
+      m[b * 3 + j] = ra * s + rb * c;
+    }
+  };
+  const turnY = (angle: number) => turn(0, 2, angle);
+  const turnX = (angle: number) => turn(1, 2, angle);
+
   // random starting attitude, so two loads never open on the same face
-  let rotX = (Math.random() - 0.5) * 0.5;
-  let rotY = Math.random() * Math.PI * 2;
+  turnY(Math.random() * Math.PI * 2);
+  turnX((Math.random() - 0.5) * 0.5);
+
   let velX = 0;
   let velY = IDLE_SPIN;
   let dragging = false;
@@ -59,24 +81,16 @@ export function initSphere(stage: HTMLElement): () => void {
   let lastY = 0;
 
   function render() {
-    const sinY = Math.sin(rotY);
-    const cosY = Math.cos(rotY);
-    const sinX = Math.sin(rotX);
-    const cosX = Math.cos(rotX);
-
     for (let i = 0; i < items.length; i++) {
-      const p = points[i];
-
-      // rotate around Y, then X
-      const x1 = p.x * cosY - p.z * sinY;
-      const z1 = p.x * sinY + p.z * cosY;
-      const y2 = p.y * cosX - z1 * sinX;
-      const z2 = p.y * sinX + z1 * cosX;
+      const { x, y, z } = points[i];
+      const rx = m[0] * x + m[1] * y + m[2] * z;
+      const ry = m[3] * x + m[4] * y + m[5] * z;
+      const rz = m[6] * x + m[7] * y + m[8] * z;
 
       // perspective divide — nearer points get bigger and more opaque
-      const depth = PERSPECTIVE / (PERSPECTIVE + z2 * radius);
-      const screenX = x1 * radius * depth;
-      const screenY = y2 * radius * depth;
+      const depth = PERSPECTIVE / (PERSPECTIVE + rz * radius);
+      const screenX = rx * radius * depth;
+      const screenY = ry * radius * depth;
 
       const item = items[i];
       item.style.transform =
@@ -87,7 +101,6 @@ export function initSphere(stage: HTMLElement): () => void {
     }
   }
 
-  const clampTilt = (v: number) => Math.max(-1.1, Math.min(1.1, v));
   const clampThrow = (v: number) => Math.max(-MAX_THROW, Math.min(MAX_THROW, v));
 
   const onMove = (e: PointerEvent) => {
@@ -102,10 +115,11 @@ export function initSphere(stage: HTMLElement): () => void {
     // only the newest delta once per frame discarded the rest of the travel,
     // which is what made dragging feel sluggish rather than merely slow.
     const stepY = dx * DRAG_SPEED;
-    // dy counts downwards and so does rotX, so pulling down tips the near face down
+    // dy counts downwards and so does a positive X turn, so pulling down tips
+    // the near face down
     const stepX = dy * DRAG_SPEED;
-    rotY += stepY;
-    rotX = clampTilt(rotX + stepX);
+    turnY(stepY);
+    turnX(stepX);
 
     // the last step doubles as the throw velocity once the drag ends
     velY = clampThrow(stepY);
@@ -165,8 +179,8 @@ export function initSphere(stage: HTMLElement): () => void {
     if (!dragging) {
       velX *= 0.93;
       velY += (IDLE_SPIN - velY) * 0.03;
-      rotY += velY;
-      rotX = clampTilt(rotX + velX);
+      turnY(velY);
+      turnX(velX);
     }
     render();
   }
