@@ -25,10 +25,10 @@ import { profile } from '../data/profile';
 </div>
 
 <style>
-  /* Below 900px the sphere is gone and nothing else claims the width, so
-     without a ceiling the contact cells reach 405px — nearly three times what
-     they are on a desktop. The two-column track tops out at 472px, so this
-     only ever bites once the columns have collapsed. */
+  /* Below 960px the sphere is gone and nothing else claims the width, so
+     without a ceiling the contact cells reach 431px — nearly twice what they
+     are on a desktop. The two-column track tops out at 468px, so this only
+     ever bites once the columns have collapsed. */
   .intro {
     width: min(100%, 30rem);
     margin-inline: auto;
@@ -37,10 +37,10 @@ import { profile } from '../data/profile';
   }
 
   /* The contact panel is solid and bordered, the sphere beside it mostly air;
-     on a shared midline this column reads as the heavier one. Below 901px
+     on a shared midline this column reads as the heavier one. Below 960px
      there is no sphere to balance against, and under 700px no slack to lift
      into without clipping the name. */
-  @media (min-width: 901px) and (min-height: 700px) {
+  @media (min-width: 960px) and (min-height: 700px) {
     .intro {
       translate: 0 -30px;
     }
@@ -116,9 +116,9 @@ import { profile } from '../data/profile';
 
   /* A phone, not a squeeze: two up needs 272px — "chat@jat.email" measures
      103.6px, so a cell needs 136px — and the narrowest this column ever gets
-     beside the sphere is 394px. Querying the column instead of the viewport
+     beside the sphere is 374px. Querying the column instead of the viewport
      cannot separate the two, because a phone's column (288-432px) and the
-     column beside the sphere (394-472px) overlap. */
+     column beside the sphere (374-468px) overlap. */
   @media (max-width: 480px) {
     .links {
       grid-template-columns: minmax(0, 1fr);

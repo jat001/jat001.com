@@ -24,24 +24,24 @@ import Base from '../layouts/Base.astro';
     margin-inline: auto;
     padding: clamp(32px, 6vh, 64px) var(--gut);
     display: grid;
-    /* An explicit track for the sphere. `auto` collapses it to zero: the
-       stage sizes itself as a percentage of the track, and the track sizes
-       itself from the stage.
-
-       The ramp reaches 35rem exactly where the shell stops at 75rem. Sized in
-       plain vw it kept widening after the shell had capped, and the text
-       column, being the 1fr, paid for every pixel of it. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, clamp(17rem, calc(60vw - 160px), 35rem));
+    /* 29 : 35 is 464px : 560px, the split on a full-width shell, kept at every
+       width so the sphere stays the wider column down to the breakpoint. In
+       fr rather than `auto`, which sizes the sphere's track from a stage that
+       sizes itself from the track, and collapses it to zero. */
+    grid-template-columns: minmax(0, 29fr) minmax(0, 35fr);
     align-items: center;
-    /* ceiling set where 4vw lands at a 75rem shell, for the same reason */
+    /* The row is only as tall as the taller column. Stretched to all of main
+       instead, it would hand the sphere stage the whole screen and its 74svh
+       cap would never apply. */
+    align-content: center;
+    /* ceiling set where 4vw lands at a 75rem shell, so it stops with the shell */
     gap: clamp(20px, 4vw, 48px);
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 959px) {
     main {
       grid-template-columns: minmax(0, 1fr);
       gap: clamp(28px, 6vh, 48px);
-      align-content: center;
     }
   }
 </style>

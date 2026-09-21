@@ -95,7 +95,7 @@ and projected with a perspective divide, and the result is written as a plain
 
 Idle it turns slowly; drag to spin it. The loop runs **only** while the sphere
 is on screen and the tab is visible, and the element watches its own box, so
-below 900px — where CSS hides it — the chunk is never even fetched.
+below 960px — where CSS hides it — the chunk is never even fetched.
 
 The logos are not links. All 34 would have pointed at the same URL, which
 cost 34 tab stops and 34 identical entries in a screen reader's link list to
@@ -164,7 +164,7 @@ until that key is cleared.
 
 ## Layout
 
-One grid, two tracks, collapsing to one below 900px — where the sphere is
+One grid, two tracks, collapsing to one below 960px — where the sphere is
 dropped rather than shrunk, so the page still fits a single screen.
 
 `body` is a flex column of `100svh`, `main` takes the slack and the footer
@@ -176,16 +176,28 @@ and the footer is at the end of it rather than floating over the content.
 The contact row is two fixed columns, not `auto-fit`: four contacts in a
 column this wide fit three across, leaving the fourth alone in its own row.
 
-Above 900px the left column is lifted 30px. It and the sphere end up within
-25px of the same height, but a bordered panel beside a cloud that is mostly
-air reads as the heavier side on a shared midline. Narrower than that there
-is no sphere to balance against, and under 700px of height no slack to lift
-into, so the rule is scoped to both.
+From 960px the left column is lifted 30px. It and the sphere end up within 25px
+of the same height, but a bordered panel beside a cloud that is mostly air
+reads as the heavier side on a shared midline. Narrower than that there is no
+sphere to balance against, and under 700px of height no slack to lift into, so
+the rule is scoped to both.
 
-The left column is capped at `30rem`. Below 900px the sphere is gone and
+The sphere asks for a square capped at `74svh`, which keeps it on one screen,
+and is then stretched to the row, so it is never shorter than the text column.
+Once the window is too short for that column the page scrolls anyway, and a
+smaller sphere only cost balance. On a 1280px-wide window at 500px of height
+the stage was 370px beside a 529px column; at 360px it was 266px, the radius
+sat on the script's 120px floor and the logos spilled out of the stage. Both
+now fill the column. From 717px of height up, `74svh` already clears the column
+at any width, so nothing changes there. The cap is on a `::before` spacer
+because a `max-height` on the stage would cap the stretch too, and `main`
+centres its row rather than stretching it, which would otherwise hand the stage
+the whole screen.
+
+The left column is capped at `30rem`. Below 960px the sphere is gone and
 nothing else claims the width, so without a ceiling the contact cells reached
-405px — nearly three times their desktop width. The two-column track tops out
-at 472px, so the cap only bites once the columns have collapsed.
+431px — nearly twice their desktop width. The two-column track tops out at
+468px, so the cap only bites once the columns have collapsed.
 
 The name and tagline are sized in `cqw`, off the column rather than the
 viewport. Once the column caps at `30rem` the viewport stops standing in for
@@ -201,19 +213,22 @@ container capped at 1072px while `14vw` carried on, and 40% at the bottom
 where the `64px` floor held the type still against a shrinking container.
 
 Stacking is a **media query** at 480px, not a container query. A container
-query cannot separate the two cases that matter, because their ranges
-overlap: a phone's column is 288–432px and the column beside the sphere is
-394–472px. A 400px threshold therefore stacked the row between 901px and
-923px of viewport — two up on either side of that band, one up inside it. The
-squeeze the container query was written for no longer exists either: it was
-calibrated when three cells needed 407px, and two need 272px against a
-394px floor.
+query cannot separate the two cases that matter, because their ranges overlap:
+a phone's column is 288–432px and the column beside the sphere is 374–468px. A
+400px threshold would therefore stack the row between 960px and 1026px of
+viewport — two up on either side of that band, one up inside it. The squeeze
+the container query was written for no longer exists either: it was calibrated
+when three cells needed 407px, and two need 272px against a 374px floor.
 
-The sphere's track reaches its `35rem` ceiling exactly where the shell caps
-at `75rem`. Sized in plain `vw` it kept widening after the shell had stopped,
-and the text column, being the `1fr`, paid for it: 552px of it at a 1200px
-viewport against 448px at 1920px, so the contact cells came out _wider_ on
-the smaller screen.
+The tracks are `29fr` and `35fr` — 464px and 560px, the split on a full-width
+shell — so the sphere is the wider column at every width. Both earlier sizings
+lost that. In plain `vw` the sphere kept widening after the shell had capped,
+and the text column paid for it: 552px of it at a 1200px viewport against 448px
+at 1920px, so the contact cells came out _wider_ on the smaller screen. A ramp
+that met `35rem` where the shell caps fixed that end but had to start low, and
+at 901px, where the columns used to split, gave the sphere 381px against 394px
+of text. The fixed split gives it 452px against 374px at 960px, where they
+split now, and from 1280px up the same 464px and 560px as before.
 
 ## Deploying
 
