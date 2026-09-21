@@ -232,7 +232,7 @@ in `wrangler.toml`, which Workers Builds ignores for that purpose:
 | setting                     | value                                                                |
 | --------------------------- | -------------------------------------------------------------------- |
 | Build command               | `pnpm run build`                                                     |
-| Deploy command              | `pnx wrangler deploy`                                                |
+| Deploy command              | `pnpx wrangler deploy`                                               |
 | Build watch paths — include | `*`                                                                  |
 | Build watch paths — exclude | `.github/*, .vscode/*, .gitignore, README.md, AGENTS.md, CLAUDE.md`  |
 
