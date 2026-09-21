@@ -57,6 +57,7 @@ import { languages } from '../data/languages';
     }
 
     #stop() {
+      this.#active = false;
       this.#generation++;
       this.#teardown?.();
       this.#teardown = null;
