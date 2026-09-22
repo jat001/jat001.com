@@ -1,0 +1,41 @@
+"$schema" = "https://openapi.vercel.sh/vercel.json"
+
+framework = "astro"
+installCommand = "pnpm install"
+buildCommand = "pnpm run build"
+devCommand = "pnpm run dev --port $PORT"
+outputDirectory = "./dist"
+
+# Exit 0 skips the build and 1 builds. Anything else fails the deployment —
+# git answers 128 for a commit that has fallen out of the depth-10 clone — so
+# the test is wrapped to give only those two. Compared with the last
+# successful deployment rather than HEAD^, which sees only a push's final
+# commit. Under `glob` a `*` stops at `/`, so only the root docs are skipped.
+ignoreCommand = """\
+    if [ -n "$VERCEL_GIT_PREVIOUS_SHA" ] && \
+    git diff --quiet "$VERCEL_GIT_PREVIOUS_SHA" HEAD -- . \
+    ':(exclude)worker' ':(exclude)wrangler.toml' ':(exclude).github' \
+    ':(exclude).vscode' ':(exclude).gitignore' ':(exclude,glob)*.md'; \
+    then exit 0; else exit 1; fi"""
+
+cleanUrls = true
+trailingSlash = false
+
+[[routes]]
+src = "^/404$"
+methods = ["GET", "HEAD"]
+status = 404
+
+[[routes]]
+src = "^/$"
+methods = ["GET", "HEAD"]
+dest = "/index.md"
+headers = { Vary = "Accept" }
+has = [
+    { type = "header", key = "Accept", value = "^(?:.*,)?\\s*text/markdown\\s*(?:[;,].*)?$" },
+]
+
+[[routes]]
+src = "^/$"
+methods = ["GET", "HEAD"]
+headers = { Vary = "Accept" }

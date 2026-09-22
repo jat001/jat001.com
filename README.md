@@ -23,7 +23,7 @@ the output, so they are `dependencies`. `typescript`, `@types/node` and
 TypeScript example keep them too.
 
 One consequence: `pnpm build` runs `astro check` first, so it needs a full
-install. Neither host does a production-only one.
+install. None of the three hosts does a production-only one.
 
 ## Commands
 
@@ -37,12 +37,13 @@ pnpm build:languages   # refresh src/data/languages.ts if it is over 12 h old
 ```
 
 `generate-types` is the one script that needs `wrangler`, which is not a
-dependency of this project. It is deliberately outside the `build` chain: the
-GitHub Pages runner has no wrangler, and a build that reached for one would
-fail there. `tsconfig.json` excludes `worker/` for the same reason — `astro
-check` would otherwise want the `Env` that script writes. Run it after editing
-`wrangler.toml`, for the editor's benefit; nothing else depends on it, and
-Workers Builds compiles `worker/index.ts` on its own.
+dependency of this project. It is deliberately outside the `build` chain:
+neither the GitHub Pages runner nor Vercel's build image has wrangler, and a
+build that reached for one would fail on both. `tsconfig.json` excludes
+`worker/` for the same reason — `astro check` would otherwise want the `Env`
+that script writes. Run it after editing `wrangler.toml`, for the editor's
+benefit; nothing else depends on it, and Workers Builds compiles
+`worker/index.ts` on its own.
 
 > On Windows, run `pnpm config set shellEmulator true` once. These scripts
 > chain with `&&` and `;`, and `cmd.exe` reads `;` as part of an argument
@@ -232,30 +233,41 @@ split now, and from 1280px up the same 464px and 560px as before.
 
 ## Deploying
 
-`pnpm build` emits a static `dist/`, and two targets are wired to it. They
-build the same output, so either can serve the site alone.
+`pnpm build` emits a static `dist/`, and three targets are wired to it. They
+build the same output, so any one of them can serve the site alone.
 
 **Cloudflare Workers.** `wrangler.toml` serves `dist/` from the edge and lists
 in `run_worker_first` the handful of paths that reach `worker/index.ts`
 instead. Everything absent from that list — the CSS, the fonts, the icons —
-never wakes it. Connect the repo in the dashboard under Workers & Pages →
-the Worker → Settings →
-Builds. That runs over Cloudflare's GitHub App, so nothing is stored in the
-repo and no API token is involved. Build settings live in the dashboard, not
-in `wrangler.toml`, which Workers Builds ignores for that purpose:
+never wakes it. Connect the repo in the dashboard under Workers & Pages → the
+Worker → Settings → Builds. That runs over Cloudflare's GitHub App, so nothing
+is stored in the repo and no API token is involved. Build settings live in the
+dashboard, not in `wrangler.toml`, which Workers Builds ignores for that
+purpose:
 
-| setting                     | value                                                                |
-| --------------------------- | -------------------------------------------------------------------- |
-| Build command               | `pnpm run build`                                                     |
-| Deploy command              | `pnpx wrangler deploy`                                               |
-| Build watch paths — include | `*`                                                                  |
-| Build watch paths — exclude | `.github/*, .vscode/*, .gitignore, README.md, AGENTS.md, CLAUDE.md`  |
+| setting                     | value                                                                            |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| Build command               | `pnpm install && pnpm run build`                                                 |
+| Deploy command              | `pnpx wrangler deploy`                                                           |
+| Build watch paths — include | `*`                                                                              |
+| Build watch paths — exclude | `.github/*, .vscode/*, .gitignore, README.md, AGENTS.md, CLAUDE.md, vercel.toml` |
+| Build variables             | `PNPM_VERSION = 12`, `SKIP_DEPENDENCY_INSTALL = 1`                               |
 
-The watch paths are the mirror of `paths-ignore` in the Pages workflow, and
-the two are **not** written the same way. Cloudflare's `*` matches the `/`
-character, where GitHub's does not, so `*.md` here would take every Markdown
-file in the tree rather than the three at the root — including, one day,
-content under `src/`, which would then stop triggering a deploy.
+The two build variables replace the install the image would otherwise run
+itself, `pnpm install --frozen-lockfile` under the pnpm the image ships. That
+one defaults to 10, and a pnpm 12 lockfile is two YAML documents — the first
+naming the pnpm to use, the second the project — which 10 rejects outright with
+`ERR_PNPM_BROKEN_LOCKFILE`. `SKIP_DEPENDENCY_INSTALL` hands the install to the
+build command, which runs the same `pnpm install` as Vercel's `installCommand`,
+and `PNPM_VERSION` carries only the major: the exact version is the one pinned
+in the lockfile, which pnpm reads and switches to on its own.
+
+The watch paths mirror `paths-ignore` in the Pages workflow and `ignoreCommand`
+in `vercel.toml`, and no two of the three are written the same way.
+Cloudflare's `*` matches the `/` character, where GitHub's does not, so `*.md`
+here would take every Markdown file in the tree rather than the three at the
+root — including, one day, content under `src/`, which would then stop
+triggering a deploy.
 
 Narrowing it to the root is not expressible. `/*.md` fails twice over: the
 wildcard may only sit at the start or end of a rule, not between `/` and
@@ -271,8 +283,9 @@ nothing else". A push of 20 commits or 3000 files skips the check and builds
 regardless.
 
 `not_found_handling` points unmatched paths at `404.html` and answers with a
-real 404; Pages serves that file with a 404 of its own, so neither needs a
-redirect. `wrangler deploy` from a checkout works too, for a manual push.
+real 404; Pages and Vercel serve that file with a 404 of their own, so none of
+them needs a redirect. `wrangler deploy` from a checkout works too, for a
+manual push.
 
 > **Pages need a cache rule to be cacheable.** Enable **Respect Strong ETags**
 > in a cache rule whose condition covers the hostname you serve. Without it,
@@ -291,18 +304,47 @@ redirect. `wrangler deploy` from a checkout works too, for a manual push.
 **GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
 hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
 Actions" in repo settings. `paths-ignore` skips the run when a push touched
-only `worker/`, `wrangler.toml`, `.vscode/`, `.gitignore` or a root `*.md`,
-none of which reach this build — ignored rather than allow-listed, because a
-forgotten build input would leave the site stale without saying so, where a
-forgotten inert file costs one spare run. `.gitattributes` is left out of the
-list: it sets the line endings of the checkout, so it can change the bytes
-that get built.
+only `worker/`, `wrangler.toml`, `vercel.toml`, `.vscode/`, `.gitignore` or a
+root `*.md`, none of which reach this build — ignored rather than allow-listed,
+because a forgotten build input would leave the site stale without saying so,
+where a forgotten inert file costs one spare run. `.gitattributes` is left out
+of the list: it sets the line endings of the checkout, so it can change the
+bytes that get built.
 
-Both assume the site sits at the root of its domain: `astro.config.ts` sets
-`site` and deliberately no `base`. Serving from a subpath, such as the default
-`jat001.github.io/jat001.com`, would need `base` plus matching changes to the
-root-absolute paths in `profile.ts`. Domains are configured on each platform
-— there is no `public/CNAME` in the repo.
+**Vercel.** `vercel.toml` holds everything, build settings included — those in
+the file override the dashboard's. Its `routes` do in config what
+`worker/index.ts` does on Cloudflare: `/404` answers 404, and `/` hands back
+`index.md` when `Accept` asks for `text/markdown`, with `Vary: Accept` on both
+answers. A `has` value is matched against the whole header rather than searched
+for inside it, so the `Accept` pattern has to consume the rest of the list and
+carries its own `^` and `$`. That leaves it correct as a search as well, so
+`worker/index.ts` holds the same regex. `cleanUrls` sends `/index.html` and
+`/404.html` to their clean paths with a 308, and `trailingSlash = false` does
+the same for `/404/`. HTML keeps its `ETag` without a cache rule, and
+`If-None-Match` answers `304`.
 
-Both builds reach for WakaTime, so an outage there fails the deploy instead of
-shipping a stale list.
+`ignoreCommand` is the third copy of the ignore list, written as a shell
+command: exit 0 skips the build and 1 builds it. Anything else fails the
+deployment outright, where the guide says 1 or greater builds — git's own 128,
+for a previous commit that is not in the clone, came back as `Command failed
+with exit code 128` — so the test is wrapped in an `if` that can only answer 0
+or 1. It diffs `HEAD` against `VERCEL_GIT_PREVIOUS_SHA`, the last successful
+deployment, rather than the `HEAD^` of the guide, which sees only the final
+commit of a push: a `src/` change followed by a README fix would have been
+skipped. Short of a clean run where nothing but ignored files changed, it
+builds — no previous deployment, or one whose commit has fallen out of the
+depth-10 clone, included. The pathspecs are git's, whose `*` crosses `/` as
+Cloudflare's does, but here the root is expressible: under `:(glob)` a `*`
+stops at `/`, so `*.md` means the root docs and nothing below. A redeploy from
+the dashboard runs it as well, so redeploying the commit that is already live
+cancels itself; the dialog's **Use project's Ignore Build Step** is the way
+past that.
+
+All three assume the site sits at the root of its domain: `astro.config.ts`
+sets `site` and deliberately no `base`. Serving from a subpath, such as the
+default `jat001.github.io/jat001.com`, would need `base` plus matching changes
+to the root-absolute paths in `profile.ts`. Domains are configured on each
+platform — there is no `public/CNAME` in the repo.
+
+All three builds reach for WakaTime, so an outage there fails the deploy
+instead of shipping a stale list.

@@ -1,7 +1,7 @@
 import { markdownPathname } from '../src/lib/markdown';
 
-const NOT_FOUND_PATH = '/404';
-const WANTS_MARKDOWN = /(?:^|,)\s*text\/markdown\s*(?:;|,|$)/i;
+const NOT_FOUND_PATH = /^\/404(?:\.html)?$/i;
+const WANTS_MARKDOWN = /^(?:.*,)?\s*text\/markdown\s*(?:[;,].*)?$/i;
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -13,9 +13,9 @@ export default {
       return new Response(null, { status: 405 });
     }
 
-    if (url.pathname === NOT_FOUND_PATH || url.pathname === `${NOT_FOUND_PATH}.html`) {
+    if (NOT_FOUND_PATH.test(url.pathname)) {
       return new Response(
-        request.method === 'HEAD' ? null : (await fetch(NOT_FOUND_PATH)).body,
+        request.method === 'HEAD' ? null : (await fetch('/404')).body,
         {
           status: 404,
           headers: {

@@ -1,4 +1,6 @@
-name = "jat001"
+"$schema" = "https://unpkg.com/wrangler/config-schema.json"
+
+name = "site"
 compatibility_date = "2026-09-20"
 
 # Three paths need code: `/` negotiates on Accept, and `/404` + `/404.html`
