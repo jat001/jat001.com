@@ -41,7 +41,7 @@ dependency of this project. It is deliberately outside the `build` chain:
 neither the GitHub Pages runner nor Vercel's build image has wrangler, and a
 build that reached for one would fail on both. `tsconfig.json` excludes
 `worker/` for the same reason — `astro check` would otherwise want the `Env`
-that script writes. Run it after editing `wrangler.toml`, for the editor's
+that script writes. Run it after editing `wrangler.jsonc`, for the editor's
 benefit; nothing else depends on it, and Workers Builds compiles
 `worker/index.ts` on its own.
 
@@ -236,13 +236,13 @@ split now, and from 1280px up the same 464px and 560px as before.
 `pnpm build` emits a static `dist/`, and three targets are wired to it. They
 build the same output, so any one of them can serve the site alone.
 
-**Cloudflare Workers.** `wrangler.toml` serves `dist/` from the edge and lists
+**Cloudflare Workers.** `wrangler.jsonc` serves `dist/` from the edge and lists
 in `run_worker_first` the handful of paths that reach `worker/index.ts`
 instead. Everything absent from that list — the CSS, the fonts, the icons —
 never wakes it. Connect the repo in the dashboard under Workers & Pages → the
 Worker → Settings → Builds. That runs over Cloudflare's GitHub App, so nothing
 is stored in the repo and no API token is involved. Build settings live in the
-dashboard, not in `wrangler.toml`, which Workers Builds ignores for that
+dashboard, not in `wrangler.jsonc`, which Workers Builds ignores for that
 purpose:
 
 | setting                     | value                                                                            |
@@ -250,7 +250,7 @@ purpose:
 | Build command               | `pnpm install && pnpm run build`                                                 |
 | Deploy command              | `pnpx wrangler deploy`                                                           |
 | Build watch paths — include | `*`                                                                              |
-| Build watch paths — exclude | `.github/*, .vscode/*, .gitignore, README.md, AGENTS.md, CLAUDE.md, vercel.toml` |
+| Build watch paths — exclude | `.github/*, .vscode/*, .gitignore, README.md, AGENTS.md, CLAUDE.md, vercel.json` |
 | Build variables             | `PNPM_VERSION = 12`, `SKIP_DEPENDENCY_INSTALL = 1`                               |
 
 The two build variables replace the install the image would otherwise run
@@ -263,7 +263,7 @@ and `PNPM_VERSION` carries only the major: the exact version is the one pinned
 in the lockfile, which pnpm reads and switches to on its own.
 
 The watch paths mirror `paths-ignore` in the Pages workflow and `ignoreCommand`
-in `vercel.toml`, and no two of the three are written the same way.
+in `vercel.json`, and no two of the three are written the same way.
 Cloudflare's `*` matches the `/` character, where GitHub's does not, so `*.md`
 here would take every Markdown file in the tree rather than the three at the
 root — including, one day, content under `src/`, which would then stop
@@ -304,24 +304,26 @@ manual push.
 **GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
 hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
 Actions" in repo settings. `paths-ignore` skips the run when a push touched
-only `worker/`, `wrangler.toml`, `vercel.toml`, `.vscode/`, `.gitignore` or a
+only `worker/`, `wrangler.jsonc`, `vercel.json`, `.vscode/`, `.gitignore` or a
 root `*.md`, none of which reach this build — ignored rather than allow-listed,
 because a forgotten build input would leave the site stale without saying so,
 where a forgotten inert file costs one spare run. `.gitattributes` is left out
 of the list: it sets the line endings of the checkout, so it can change the
 bytes that get built.
 
-**Vercel.** `vercel.toml` holds everything, build settings included — those in
-the file override the dashboard's. Its `routes` do in config what
-`worker/index.ts` does on Cloudflare: `/404` answers 404, and `/` hands back
-`index.md` when `Accept` asks for `text/markdown`, with `Vary: Accept` on both
-answers. A `has` value is matched against the whole header rather than searched
-for inside it, so the `Accept` pattern has to consume the rest of the list and
-carries its own `^` and `$`. That leaves it correct as a search as well, so
-`worker/index.ts` holds the same regex. `cleanUrls` sends `/index.html` and
-`/404.html` to their clean paths with a 308, and `trailingSlash = false` does
-the same for `/404/`. HTML keeps its `ETag` without a cache rule, and
-`If-None-Match` answers `304`.
+**Vercel.** `vercel.json` holds everything, build settings included — those in
+the file override the dashboard's. JSON rather than the TOML or TypeScript
+forms, which the CLI compiles before the build and runs an install of its own
+for, one the config cannot redirect because it has not been read yet. Its
+`routes` do in config what `worker/index.ts` does on Cloudflare: `/404` answers
+404, and `/` hands back `index.md` when `Accept` asks for `text/markdown`, with
+`Vary: Accept` on both answers. A `has` value is matched against the whole
+header rather than searched for inside it, so the `Accept` pattern has to
+consume the rest of the list and carries its own `^` and `$`. That leaves it
+correct as a search as well, so `worker/index.ts` holds the same regex.
+`cleanUrls` sends `/index.html` and `/404.html` to their clean paths with a
+308, and `trailingSlash: false` does the same for `/404/`. HTML keeps its
+`ETag` without a cache rule, and `If-None-Match` answers `304`.
 
 `ignoreCommand` is the third copy of the ignore list, written as a shell
 command: exit 0 skips the build and 1 builds it. Anything else fails the

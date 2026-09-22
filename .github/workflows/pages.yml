@@ -12,8 +12,8 @@ on:
     # can change the bytes that are built.
     paths-ignore:
       - worker/**
-      - wrangler.toml
-      - vercel.toml
+      - wrangler.jsonc
+      - vercel.json
       - .vscode/**
       - .gitignore
       - '*.md'
