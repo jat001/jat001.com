@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 # Whether Vercel or Netlify should build this push. Exit 0 skips the build and
-# 1 builds it; Netlify documents nothing else, and Vercel fails the deployment
-# on any other code, git's 128 included.
+# 1 builds it. A redeploy builds regardless: Netlify does not run the script,
+# and Vercel runs it only if the Redeploy dialog's "Use project's Ignore Build
+# Step" is ticked, then ignores its exit code.
+
+# Neither build log is a terminal, but both render ANSI colours.
+bold=$'\e[1m' dim=$'\e[2m' green=$'\e[32m' yellow=$'\e[33m' cyan=$'\e[36m'
+reset=$'\e[0m'
+
+build() { echo "🔨 $bold${green}Build:$reset $1"; }
+skip() { echo "⏩ $bold${yellow}Skip:$reset $1"; }
 
 # Each host names the two commits in variables of its own. They are printed,
 # set or not, so a build log shows which ones each kind of deploy provides.
 print() {
   local name
   for name; do
-    if [[ -v $name ]]; then echo "$name=${!name}"; else echo "$name unset"; fi
+    if [[ -v $name ]]; then
+      echo "🔹 $cyan$name$reset=${!name}"
+    else
+      echo "🔸 $cyan$name$reset ${dim}unset$reset"
+    fi
   done
 }
 
@@ -22,25 +34,26 @@ if [[ ${VERCEL-} == 1 ]]; then
   from=${VERCEL_GIT_PREVIOUS_SHA-} to=${VERCEL_GIT_COMMIT_SHA-}
   excludes+=(':^netlify.toml' ':^netlify')
 elif [[ ${NETLIFY-} == true ]]; then
-  print CONTEXT BRANCH HEAD COMMIT_REF CACHED_COMMIT_REF
+  print CONTEXT HEAD COMMIT_REF CACHED_COMMIT_REF
   from=${CACHED_COMMIT_REF-} to=${COMMIT_REF-}
   excludes+=(':^vercel.json' ':^vercel')
 else
-  echo 'Build: neither VERCEL nor NETLIFY is set.'
+  build 'neither VERCEL nor NETLIFY is set.'
   exit 1
 fi
-echo "git rev-parse HEAD: $(git rev-parse HEAD)"
+echo "📍 ${cyan}git rev-parse HEAD$reset: $(git rev-parse HEAD)"
 
+# Netlify gives a build without cache its own commit as CACHED_COMMIT_REF.
 if [[ -z $from || -z $to || $from == "$to" ]]; then
-  echo 'Build: no earlier commit to compare with, or the same one again.'
+  build 'no earlier commit to compare with.'
 elif ! git cat-file -e "$from^{commit}" 2>/dev/null; then
-  echo "Build: $from is not in the clone."
+  build "$from is not in the clone."
 elif ! git cat-file -e "$to^{commit}" 2>/dev/null; then
-  echo "Build: $to is not in the clone."
+  build "$to is not in the clone."
 elif git diff --quiet "$from" "$to" -- . "${excludes[@]}"; then
-  echo "Skip: nothing outside the ignored paths changed since $from."
+  skip "nothing outside the ignored paths changed since $from."
   exit 0
 else
-  echo "Build: files outside the ignored paths changed since $from."
+  build "files outside the ignored paths changed since $from."
 fi
 exit 1

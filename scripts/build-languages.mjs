@@ -17,6 +17,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { styleText } from 'node:util';
 import * as simpleIcons from 'simple-icons';
 
 const SHARE_URL =
@@ -64,6 +65,9 @@ const ICON_OVERRIDE = new Map([['sql', 'devicon:azuresqldatabase']]);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(root, 'src/data/languages.ts');
 
+/** Neither build log is a terminal, but both render ANSI colours. */
+const style = (format, text) => styleText(format, text, { validateStream: false });
+
 /**
  * Age of the list in milliseconds, or null if there is none to date. Read from
  * the header rather than the file's mtime: mtime is when the bytes last landed
@@ -81,8 +85,8 @@ if (!process.argv.includes('--force')) {
   const age = ageOfList();
   if (age !== null && age < MAX_AGE_HOURS * 3600_000) {
     console.log(
-      `src/data/languages.ts is ${(age / 3600_000).toFixed(1)} h old, under ${MAX_AGE_HOURS} h — kept.` +
-        ' Pass --force to fetch anyway.'
+      `⏩ ${style('cyan', 'src/data/languages.ts')} is ${(age / 3600_000).toFixed(1)} h old, under ${MAX_AGE_HOURS} h — ${style('green', 'kept')}.` +
+        ` Pass ${style('bold', '--force')} to fetch anyway.`
     );
     process.exit(0);
   }
@@ -227,8 +231,8 @@ export const languages: Language[] = ${JSON.stringify(data, null, 2)};
 );
 
 const hours = (s) => (s / 3600).toFixed(s < 36000 ? 1 : 0).padStart(6);
-console.log(`wrote src/data/languages.ts — ${data.length} icons, ${(bytes / 1024).toFixed(1)} KB of paths\n`);
-console.log(`kept (${kept.length}):`);
-for (const k of kept) console.log(`  ${k.label.padEnd(24)} ${hours(k.seconds)} h   ${k.source}`);
-console.log(`\nover ${MIN_SECONDS / 3600} h but no icon anywhere (${dropped.length}):`);
-for (const d of dropped) console.log(`  ${d.label.padEnd(24)} ${hours(d.seconds)} h`);
+console.log(`📝 ${style('green', 'wrote')} ${style('cyan', 'src/data/languages.ts')} — ${data.length} icons, ${(bytes / 1024).toFixed(1)} KB of paths\n`);
+console.log(`✅ ${style(['bold', 'green'], `kept (${kept.length}):`)}`);
+for (const k of kept) console.log(`  ${k.label.padEnd(24)} ${hours(k.seconds)} h   ${style('dim', k.source)}`);
+console.log(`\n🚫 ${style(['bold', 'yellow'], `over ${MIN_SECONDS / 3600} h but no icon anywhere (${dropped.length}):`)}`);
+for (const d of dropped) console.log(`  ${style('yellow', d.label.padEnd(24))} ${hours(d.seconds)} h`);
