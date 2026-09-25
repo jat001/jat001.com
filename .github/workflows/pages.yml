@@ -14,6 +14,10 @@ on:
       - worker/**
       - wrangler.jsonc
       - vercel.json
+      - vercel/**
+      - netlify.toml
+      - netlify/**
+      - scripts/ignore-build.sh
       - .vscode/**
       - .gitignore
       - '*.md'

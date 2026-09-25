@@ -15,15 +15,20 @@ of language logos on the right. Light and dark.
 `devicon` and `simple-icons` are read only by the generator; their paths are
 inlined at build time, so neither library reaches the browser.
 
-The split is by what reaches `dist/`, not by npm's published-package sense of
+The split is by what gets deployed, not by npm's published-package sense of
 runtime: `astro`, its integrations and the two icon libraries all put bytes in
-the output, so they are `dependencies`. `typescript`, `@types/node` and
-`@astrojs/check` only ever check — Astro strips types with esbuild, never tsc
-— so they are `devDependencies`, where the Astro docs site and the Next.js
+`dist/`, and `negotiator` in the Worker, the edge function and the proxy, so
+they are `dependencies`. `typescript`, `@types/node`, `@types/negotiator` and
+`@astrojs/check` only ever check — Astro strips types with esbuild, never tsc —
+so they are `devDependencies`, where the Astro docs site and the Next.js
 TypeScript example keep them too.
 
+`Accept` goes through `negotiator`, the parser behind Express's
+`req.accepts()`, rather than a pattern: it weighs `q` and specificity, and
+breaks a tie by the order the client listed.
+
 One consequence: `pnpm build` runs `astro check` first, so it needs a full
-install. None of the three hosts does a production-only one.
+install. None of the four hosts does a production-only one.
 
 ## Commands
 
@@ -32,22 +37,8 @@ pnpm dev               # regenerate languages, then dev server
 pnpm check             # regenerate languages, then astro check
 pnpm build             # check, then astro build
 pnpm preview           # build, then serve dist/
-pnpm generate-types    # generate worker-configuration.d.ts and .astro/*.d.ts
 pnpm build:languages   # refresh src/data/languages.ts if it is over 12 h old
 ```
-
-`generate-types` is the one script that needs `wrangler`, which is not a
-dependency of this project. It is deliberately outside the `build` chain:
-neither the GitHub Pages runner nor Vercel's build image has wrangler, and a
-build that reached for one would fail on both. `tsconfig.json` excludes
-`worker/` for the same reason — `astro check` would otherwise want the `Env`
-that script writes. Run it after editing `wrangler.jsonc`, for the editor's
-benefit; nothing else depends on it, and Workers Builds compiles
-`worker/index.ts` on its own.
-
-> On Windows, run `pnpm config set shellEmulator true` once. These scripts
-> chain with `&&` and `;`, and `cmd.exe` reads `;` as part of an argument
-> rather than as a command separator. pnpm's own shell reads both.
 
 `src/data/languages.ts` is generated and gitignored. `dev`, `check`, `build`
 and `preview` refresh it, but only if the copy on disk is **over 12 h old** —
@@ -70,14 +61,20 @@ src/
   components/   Hero (left), Sphere (right), ThemeToggle, Footer
   data/         profile.ts — all the copy; languages.ts — GENERATED
   layouts/      Base.astro — head, meta, fonts, no-flash theme script
-  lib/          markdown.ts — where a page's Markdown twin lives
+  lib/          markdown.ts — where a page's Markdown twin lives, who asks
   pages/        index.astro — the page itself; 404.astro; index.md.ts
   scripts/      sphere.ts — the 3D, dynamically imported
   styles/       global.css — tokens for both themes
 scripts/
   build-languages.mjs   WakaTime + icons -> src/data/languages.ts
+  ignore-build.sh       Vercel, Netlify: skip builds nothing of theirs touched
 worker/
   index.ts      Cloudflare only: Accept negotiation, and a 404 that says 404
+netlify/
+  edge-functions/
+    index.ts    Netlify only: Accept negotiation; its 404s are redirects
+vercel/
+  index.ts      Vercel only: Accept negotiation; its 404 is a route
 ```
 
 The only copy outside `profile.ts` is interface text: the two hard-coded
@@ -233,25 +230,28 @@ split now, and from 1280px up the same 464px and 560px as before.
 
 ## Deploying
 
-`pnpm build` emits a static `dist/`, and three targets are wired to it. They
+`pnpm build` emits a static `dist/`, and four targets are wired to it. They
 build the same output, so any one of them can serve the site alone.
 
 **Cloudflare Workers.** `wrangler.jsonc` serves `dist/` from the edge and lists
 in `run_worker_first` the handful of paths that reach `worker/index.ts`
 instead. Everything absent from that list — the CSS, the fonts, the icons —
-never wakes it. Connect the repo in the dashboard under Workers & Pages → the
-Worker → Settings → Builds. That runs over Cloudflare's GitHub App, so nothing
-is stored in the repo and no API token is involved. Build settings live in the
-dashboard, not in `wrangler.jsonc`, which Workers Builds ignores for that
-purpose:
+never wakes it. The Worker declares the one binding it reads, `ASSETS`, rather
+than taking an `Env` from `wrangler types`: wrangler is not a dependency here,
+and none of the other three build images has it, so `astro check` covers the
+Worker on every host while Workers Builds compiles it on its own. Connect the
+repo in the dashboard under Workers & Pages → the Worker → Settings → Builds.
+That runs over Cloudflare's GitHub App, so nothing is stored in the repo and no
+API token is involved. Build settings live in the dashboard, not in
+`wrangler.jsonc`, which Workers Builds ignores for that purpose:
 
-| setting                     | value                                                                            |
-| --------------------------- | -------------------------------------------------------------------------------- |
-| Build command               | `pnpm install && pnpm run build`                                                 |
-| Deploy command              | `pnpx wrangler deploy`                                                           |
-| Build watch paths — include | `*`                                                                              |
-| Build watch paths — exclude | `.github/*, .vscode/*, .gitignore, README.md, AGENTS.md, CLAUDE.md, vercel.json` |
-| Build variables             | `PNPM_VERSION = 12`, `SKIP_DEPENDENCY_INSTALL = 1`                               |
+| setting                     | value                                                                                                                                        |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build command               | `pnpm install && pnpm run build`                                                                                                             |
+| Deploy command              | `pnpx wrangler deploy`                                                                                                                       |
+| Build watch paths — include | `*`                                                                                                                                          |
+| Build watch paths — exclude | `.github/*, .vscode/*, .gitignore, README.md, AGENTS.md, CLAUDE.md, vercel.json, vercel/*, netlify.toml, netlify/*, scripts/ignore-build.sh` |
+| Build variables             | `PNPM_VERSION = 12`, `SKIP_DEPENDENCY_INSTALL = 1`                                                                                           |
 
 The two build variables replace the install the image would otherwise run
 itself, `pnpm install --frozen-lockfile` under the pnpm the image ships. That
@@ -262,12 +262,12 @@ build command, which runs the same `pnpm install` as Vercel's `installCommand`,
 and `PNPM_VERSION` carries only the major: the exact version is the one pinned
 in the lockfile, which pnpm reads and switches to on its own.
 
-The watch paths mirror `paths-ignore` in the Pages workflow and `ignoreCommand`
-in `vercel.json`, and no two of the three are written the same way.
-Cloudflare's `*` matches the `/` character, where GitHub's does not, so `*.md`
-here would take every Markdown file in the tree rather than the three at the
-root — including, one day, content under `src/`, which would then stop
-triggering a deploy.
+The watch paths mirror `paths-ignore` in the Pages workflow and the lists in
+`scripts/ignore-build.sh`, which Vercel and Netlify both run, and no two of the
+three are written the same way. Cloudflare's `*` matches the `/` character,
+where GitHub's does not, so `*.md` here would take every Markdown file in the
+tree rather than the three at the root — including, one day, content under
+`src/`, which would then stop triggering a deploy.
 
 Narrowing it to the root is not expressible. `/*.md` fails twice over: the
 wildcard may only sit at the start or end of a rule, not between `/` and
@@ -283,9 +283,9 @@ nothing else". A push of 20 commits or 3000 files skips the check and builds
 regardless.
 
 `not_found_handling` points unmatched paths at `404.html` and answers with a
-real 404; Pages and Vercel serve that file with a 404 of their own, so none of
-them needs a redirect. `wrangler deploy` from a checkout works too, for a
-manual push.
+real 404; Pages, Vercel and Netlify serve that file with a 404 of their own, so
+none of them needs a redirect. `wrangler deploy` from a checkout works too, for
+a manual push.
 
 > **Pages need a cache rule to be cacheable.** Enable **Respect Strong ETags**
 > in a cache rule whose condition covers the hostname you serve. Without it,
@@ -304,49 +304,91 @@ manual push.
 **GitHub Pages.** `.github/workflows/pages.yml` builds on a push to `main` and
 hands the artefact to `actions/deploy-pages`. Set the Pages source to "GitHub
 Actions" in repo settings. `paths-ignore` skips the run when a push touched
-only `worker/`, `wrangler.jsonc`, `vercel.json`, `.vscode/`, `.gitignore` or a
-root `*.md`, none of which reach this build — ignored rather than allow-listed,
+only `worker/`, `wrangler.jsonc`, `vercel.json`, `vercel/`, `netlify.toml`,
+`netlify/`, `scripts/ignore-build.sh`, `.vscode/`, `.gitignore` or a root
+`*.md`, none of which reach this build — ignored rather than allow-listed,
 because a forgotten build input would leave the site stale without saying so,
-where a forgotten inert file costs one spare run. `.gitattributes` is left out
-of the list: it sets the line endings of the checkout, so it can change the
-bytes that get built.
+where a forgotten inert file costs one spare run. The TypeScript among them —
+`worker/index.ts`, `vercel/index.ts` and the edge function — does reach
+`astro check`, but each file also triggers its own host's build, which a type
+error stops first. `.gitattributes` is left out of the list: it sets the line
+endings of the checkout, so it can change the bytes that get built.
 
 **Vercel.** `vercel.json` holds everything, build settings included — those in
 the file override the dashboard's. JSON rather than the TOML or TypeScript
 forms, which the CLI compiles before the build and runs an install of its own
-for, one the config cannot redirect because it has not been read yet. Its
-`routes` do in config what `worker/index.ts` does on Cloudflare: `/404` answers
-404, and `/` hands back `index.md` when `Accept` asks for `text/markdown`, with
-`Vary: Accept` on both answers. A `has` value is matched against the whole
-header rather than searched for inside it, so the `Accept` pattern has to
-consume the rest of the list and carries its own `^` and `$`. That leaves it
-correct as a search as well, so `worker/index.ts` holds the same regex.
-`cleanUrls` sends `/index.html` and `/404.html` to their clean paths with a
-308, and `trailingSlash: false` does the same for `/404/`. HTML keeps its
-`ETag` without a cache rule, and `If-None-Match` answers `304`.
+for, one the config cannot redirect because it has not been read yet. Compiling
+would buy nothing either: `vercel.ts` runs once, at build time, and what it
+exports is serialised into the same static JSON, so no code of its reaches a
+request.
 
-`ignoreCommand` is the third copy of the ignore list, written as a shell
-command: exit 0 skips the build and 1 builds it. Anything else fails the
-deployment outright, where the guide says 1 or greater builds — git's own 128,
-for a previous commit that is not in the clone, came back as `Command failed
-with exit code 128` — so the test is wrapped in an `if` that can only answer 0
-or 1. It diffs `HEAD` against `VERCEL_GIT_PREVIOUS_SHA`, the last successful
-deployment, rather than the `HEAD^` of the guide, which sees only the final
-commit of a push: a `src/` change followed by a README fix would have been
-skipped. Short of a clean run where nothing but ignored files changed, it
-builds — no previous deployment, or one whose commit has fallen out of the
-depth-10 clone, included. The pathspecs are git's, whose `*` crosses `/` as
-Cloudflare's does, but here the root is expressible: under `:(glob)` a `*`
-stops at `/`, so `*.md` means the root docs and nothing below. A redeploy from
-the dashboard runs it as well, so redeploying the commit that is already live
-cancels itself; the dialog's **Use project's Ignore Build Step** is the way
-past that.
+`framework` is `null`. The docs rule `proxy` out for frameworks that build
+their own routing middleware, Astro among them, and a static build builds none;
+every setting the Astro preset would supply is already spelled out. The
+year-long `immutable` on `/_astro/` survives without it: a deployment with
+`framework: null` still serves those files that way, so it comes from the
+platform, not the preset. The one route answers `/404` with a 404.
 
-All three assume the site sits at the root of its domain: `astro.config.ts`
-sets `site` and deliberately no `base`. Serving from a subpath, such as the
-default `jat001.github.io/jat001.com`, would need `base` plus matching changes
-to the root-absolute paths in `profile.ts`. Domains are configured on each
-platform — there is no `public/CNAME` in the repo.
+`/` belongs to `proxy`, Routing Middleware, whose entrypoint is
+`vercel/index.ts`: it hands back `index.md` when `wantsMarkdown` says so, with
+`Vary: Accept` on both answers, and answers any other method 405, as the Worker
+and the edge function do, where Vercel on its own gives `OPTIONS` a 204. It
+sets `x-middleware-rewrite` or `x-middleware-next` itself, which is all
+`rewrite()` and `next()` from `@vercel/functions` do, so the package is not a
+dependency. `Vary` goes on the response the proxy returns; the helpers'
+`request.headers` would instead replace every header of the request sent on.
+Neither helper fetches anything: the rewrite happens after the proxy returns,
+so it never sees the twin's response, and it needs to see none, `/index.md`
+being a build output. The docs run a `proxy` entrypoint on Node. Built locally,
+the Node function carries the compiled files as they are rather than bundled,
+so the import names `markdown.js`, the file that exists by then. `cleanUrls`
+sends `/index.html` and `/404.html` to their clean paths with a 308, and
+`trailingSlash: false` does the same for `/404/`. HTML keeps its `ETag` without
+a cache rule, and `If-None-Match` answers `304`.
 
-All three builds reach for WakaTime, so an outage there fails the deploy
-instead of shipping a stale list.
+`ignoreCommand` runs `scripts/ignore-build.sh`, which Netlify's `ignore` runs
+too. It tells the hosts apart by `VERCEL` and `NETLIFY`, and prints the
+variables that name the two commits, set or not, so a build log shows which
+ones each kind of deploy provides. Exit 0 skips the build and 1 builds it.
+Anything else fails the deployment outright, where the guide says 1 or greater
+builds — git's own 128, for a previous commit that is not in the clone, came
+back as `Command failed with exit code 128` — so the script checks that both
+commits are in the clone before it diffs them, and every other path ends in
+`exit 1`. Here it diffs `VERCEL_GIT_COMMIT_SHA`, the commit being built,
+against `VERCEL_GIT_PREVIOUS_SHA`, the last successful deployment, rather than
+the `HEAD^` of the guide, which sees only the final commit of a push: a `src/`
+change followed by a README fix would have been skipped. Short of a clean diff
+where nothing but ignored files changed, it builds — no previous deployment,
+one whose commit has fallen out of the depth-10 clone, and a redeploy of the
+commit already live, included. The pathspecs are git's, whose `*` crosses `/`
+as Cloudflare's does, but here the root is expressible: under `:(glob)` a `*`
+stops at `/`, so `*.md` means the root docs and nothing below.
+
+**Netlify.** `netlify.toml`, the only file format Netlify reads, holds the
+build and dev commands, the publish directory, the ignore command and Pretty
+URLs. `/index.html` goes to `/` with a forced 301: Pretty URLs leaves it
+answering 200 as a copy of `/`, where Cloudflare and Vercel redirect it. `/404`
+and `/404.html` answer 404 through two rewrites carrying that status, forced
+because a file already sits at each path and would otherwise shadow the rule.
+`/` is the one path that needs code, `netlify/edge-functions/index.ts`,
+declared in the same file, because a redirect rule can match a country, a
+language, a role, a cookie or a query parameter but no other header. It takes
+the `Accept` test and the twin rule from `src/lib/markdown.ts`, and its import
+names the `.ts` extension, which Deno's bundler insists on for a relative path.
+The twin goes to `context.next()` as a new `Request` with the original as its
+init: `sendConditionalRequest` only stops Netlify stripping the conditional
+headers of the request it is given, and a bare `Request` has none.
+
+`ignore` runs the same script, which diffs `CACHED_COMMIT_REF` against
+`COMMIT_REF` here and leaves out Vercel's files rather than Netlify's. Equal
+refs build: there is no earlier build to compare with, or the same commit is
+being built again.
+
+All four assume the site sits at the root of its domain: `astro.config.ts` sets
+`site` and deliberately no `base`. Serving from a subpath, such as the default
+`jat001.github.io/jat001.com`, would need `base` plus matching changes to the
+root-absolute paths in `profile.ts`. Domains are configured on each platform —
+there is no `public/CNAME` in the repo.
+
+All four builds reach for WakaTime, so an outage there fails the deploy instead
+of shipping a stale list.

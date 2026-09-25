@@ -1,0 +1,35 @@
+[dev]
+framework = "#custom"
+command = "pnpm run dev"
+targetPort = 4321
+autoLaunch = false
+
+[build]
+ignore = "bash scripts/ignore-build.sh"
+command = "pnpm run build"
+publish = "dist"
+
+[build.processing.html]
+pretty_urls = true
+
+[[redirects]]
+from = "/index.html"
+to = "/"
+status = 301
+force = true
+
+[[redirects]]
+from = "/404"
+to = "/404.html"
+status = 404
+force = true
+
+[[redirects]]
+from = "/404.html"
+to = "/404.html"
+status = 404
+force = true
+
+[[edge_functions]]
+path = "/"
+function = "index"
