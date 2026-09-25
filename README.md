@@ -350,19 +350,18 @@ a cache rule, and `If-None-Match` answers `304`.
 too. It tells the hosts apart by `VERCEL` and `NETLIFY`, and prints the
 variables that name the two commits, set or not, so a build log shows which
 ones each kind of deploy provides. Exit 0 skips the build and 1 builds it.
-Anything else fails the deployment outright, where the guide says 1 or greater
-builds — git's own 128, for a previous commit that is not in the clone, came
-back as `Command failed with exit code 128` — so the script checks that both
-commits are in the clone before it diffs them, and every other path ends in
-`exit 1`. Here it diffs `VERCEL_GIT_COMMIT_SHA`, the commit being built,
-against `VERCEL_GIT_PREVIOUS_SHA`, the last successful deployment, rather than
-the `HEAD^` of the guide, which sees only the final commit of a push: a `src/`
+Here it diffs `VERCEL_GIT_COMMIT_SHA`, the commit being built, against
+`VERCEL_GIT_PREVIOUS_SHA`, the last successful deployment, rather than the
+`HEAD^` of the guide, which sees only the final commit of a push: a `src/`
 change followed by a README fix would have been skipped. Short of a clean diff
-where nothing but ignored files changed, it builds — no previous deployment,
-one whose commit has fallen out of the depth-10 clone, and a redeploy of the
-commit already live, included. The pathspecs are git's, whose `*` crosses `/`
-as Cloudflare's does, but here the root is expressible: under `:(glob)` a `*`
-stops at `/`, so `*.md` means the root docs and nothing below.
+where nothing but ignored files changed, it builds — no previous deployment
+and one whose commit has fallen out of the depth-10 clone included. A redeploy
+builds regardless of the script. With "Use project's Ignore Build Step" ticked
+in the Redeploy dialog, it runs, both SHAs set to the commit being redeployed,
+but its exit code is ignored; unticked, it does not run. The pathspecs are
+git's, whose `*` crosses `/` as Cloudflare's does, but here the root is
+expressible: under `:(glob)` a `*` stops at `/`, so `*.md` means the root docs
+and nothing below.
 
 **Netlify.** `netlify.toml`, the only file format Netlify reads, holds the
 build and dev commands, the publish directory, the ignore command and Pretty
@@ -381,8 +380,10 @@ headers of the request it is given, and a bare `Request` has none.
 
 `ignore` runs the same script, which diffs `CACHED_COMMIT_REF` against
 `COMMIT_REF` here and leaves out Vercel's files rather than Netlify's. Equal
-refs build: there is no earlier build to compare with, or the same commit is
-being built again.
+refs build: the docs give a build without cache its own commit as
+`CACHED_COMMIT_REF`, so there is nothing earlier to compare with. A redeploy
+does not run it at all, though the log still announces the custom ignore
+command before moving on to the install.
 
 All four assume the site sits at the root of its domain: `astro.config.ts` sets
 `site` and deliberately no `base`. Serving from a subpath, such as the default
