@@ -19,8 +19,11 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
-# jetbrains setting folder
+# ide setting folder
 .idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
 
 # platform-specific folders
 .wrangler/
