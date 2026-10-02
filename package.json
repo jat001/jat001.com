@@ -2,7 +2,7 @@
   "name": "jat001.com",
   "type": "module",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.0",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@types/negotiator": "^0.6.5",
-    "@types/node": "^24.13.6",
+    "@types/node": "^24.19.0",
     "typescript": "^7.0.2"
   }
 }
