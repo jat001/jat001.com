@@ -6,7 +6,7 @@ interface Env {
   };
 }
 
-const NOT_FOUND_PATH = /^\/404(?:\.html)?$/i;
+const NOT_FOUND_PATH = /^\/404(?:\.html)?\/?$/i;
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
